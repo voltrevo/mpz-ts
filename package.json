@@ -10,7 +10,7 @@
   "keywords": [],
   "author": "Andrew Morris",
   "license": "MIT",
-  "dependencies": {
+  "devDependencies": {
     "typescript": "^5.4.5"
   }
 }
