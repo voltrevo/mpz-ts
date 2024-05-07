@@ -1,5 +1,5 @@
 {
-  "name": "mpz",
+  "name": "mpz-ts",
   "version": "0.0.0",
   "description": "MPC library backed by privacy-scaling-explorations/mpz",
   "main": "dist/src/index.js",

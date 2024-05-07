@@ -11,11 +11,11 @@ support. It does not work yet.
 ## Usage
 
 ```sh
-npm install mpz
+npm install mpz-ts
 ```
 
 ```ts
-import * as mpz from 'mpz';
+import * as mpz from 'mpz-ts';
 
 const circuitSrc = {
   // In a real project you should be able to include these as regular files, but
@@ -71,5 +71,5 @@ console.log(await session.output()); // { c: 8 }
 
 ## Example Project
 
-For a more complete example in the form of a repository using `mpz`, see
-[mpz-example](https://github.com/voltrevo/mpz-example).
+For a more complete example in the form of a repository using `mpz-ts`, see
+[mpz-ts-example](https://github.com/voltrevo/mpz-ts-example).
