@@ -18,6 +18,9 @@ npm install mpz
 import * as mpz from 'mpz';
 
 const circuitSrc = {
+  // In a real project you should be able to include these as regular files, but
+  // how those files find their way into this format depends on your build tool.
+
   'main.circom': `
     pragma circom 2.0.0;
 
