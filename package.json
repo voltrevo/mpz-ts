@@ -9,6 +9,10 @@
   },
   "keywords": [],
   "author": "Andrew Morris",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/voltrevo/mpz-ts.git"
+  },
   "license": "MIT",
   "devDependencies": {
     "typescript": "^5.4.5"
