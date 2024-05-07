@@ -7,7 +7,7 @@
     "build": "rm -rf dist && tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
+  "keywords": ["MPC", "multi", "party", "computation", "pse", "cryptography"],
   "author": "Andrew Morris",
   "repository": {
     "type": "git",
