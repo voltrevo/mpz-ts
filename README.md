@@ -68,3 +68,8 @@ onMessageReceived((from: string, msg: Uint8Array) => {
 
 console.log(await session.output()); // { c: 8 }
 ```
+
+## Example Project
+
+For a more complete example in the form of a repository using `mpz`, see
+[mpz-example](https://github.com/voltrevo/mpz-example).
