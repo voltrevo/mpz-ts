@@ -11,11 +11,11 @@ support. It does not work yet.
 ## Usage
 
 ```sh
-npm install circuit-2-arithc mpz-ts
+npm install circom-2-arithc mpz-ts
 ```
 
 ```ts
-import * as c2a from 'circuit-2-arithc';
+import * as c2a from 'circom-2-arithc';
 import * as mpz from 'mpz-ts';
 
 const circuitSrc = {
