@@ -45,12 +45,20 @@ console.log(
   }),
 ); // { c: 8 }
 
-const parties = {
-  alice: ['a'],
-  bob: ['b'],
-};
+const mpcSettings = [
+  {
+    name: 'alice',
+    inputs: ['a'],
+    outputs: ['c'],
+  },
+  {
+    name: 'bob',
+    inputs: ['b'],
+    outputs: ['c'],
+  },
+];
 
-const protocol = new mpz.Protocol(circuit.toMpzCircuit(), parties);
+const protocol = new mpz.Protocol(circuit.toMpzCircuit(), mpcSettings);
 
 function send(to: string, msg: Uint8Array) {
   // implement sending a message to the specified party

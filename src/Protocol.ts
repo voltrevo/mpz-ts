@@ -1,8 +1,16 @@
 import Circuit from "./Circuit";
 import Session from "./Session";
 
+export type MpcParticipantSettings = {
+  name?: string,
+  inputs: string[],
+  outputs: string[],
+};
+
+export type MpcSettings = MpcParticipantSettings[];
+
 export default class Protocol {
-  constructor(_circuit: Circuit, _parties: Record<string, string[]>) {}
+  constructor(_circuit: Circuit, _mpcSettings: MpcSettings) {}
 
   join(
     _name: string,
