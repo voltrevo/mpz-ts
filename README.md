@@ -11,10 +11,11 @@ support. It does not work yet.
 ## Usage
 
 ```sh
-npm install mpz-ts
+npm install circuit-2-arithc mpz-ts
 ```
 
 ```ts
+import * as c2a from 'circuit-2-arithc';
 import * as mpz from 'mpz-ts';
 
 const circuitSrc = {
@@ -35,7 +36,7 @@ const circuitSrc = {
   `,
 };
 
-const circuit = mpz.Circuit.fromCircom(circuitSrc);
+const circuit = c2a.Circuit.compile(circuitSrc);
 
 console.log(
   circuit.eval({
@@ -49,7 +50,7 @@ const parties = {
   bob: ['b'],
 };
 
-const protocol = new mpz.Protocol(circuit, parties);
+const protocol = new mpz.Protocol(circuit.toMpzCircuit(), parties);
 
 function send(to: string, msg: Uint8Array) {
   // implement sending a message to the specified party

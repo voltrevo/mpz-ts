@@ -1,9 +1,5 @@
-export default class Circuit {
-  eval(_input: Record<string, unknown>): Record<string, unknown> {
-    throw new Error('Not implemented');
-  }
+type Circuit = {
+  mpzCircuitData(): Uint8Array;
+};
 
-  static fromCircom(_files: Record<string, string>): Circuit {
-    throw new Error('Not implemented');
-  }
-}
+export default Circuit;
