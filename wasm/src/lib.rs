@@ -1,84 +1,108 @@
+mod js_fn_executor;
+mod setup_garble;
+mod js_conn;
+
 use console_error_panic_hook::set_once as set_panic_hook;
-use futures::{AsyncRead, AsyncWrite};
-use serde::{Deserialize, Serialize};
+use js_conn::JsConn;
+use mpz_circuits::circuits::AES128;
+use mpz_common::executor::STExecutor;
+use mpz_garble::{DecodePrivate, Execute, Memory};
+use serio::codec::{Bincode, Codec};
+use setup_garble::Role;
 use wasm_bindgen::prelude::*;
-use serio::{codec::{Bincode, Codec}, SinkExt};
 
 #[wasm_bindgen]
 pub fn init_ext() {
     set_panic_hook();
 }
 
-struct JsConn {
-    send: js_sys::Function,
-    recv: js_sys::Function,
-}
-
-impl AsyncWrite for JsConn {
-    fn poll_write(
-        self: std::pin::Pin<&mut Self>,
-        _cx: &mut std::task::Context<'_>,
-        buf: &[u8],
-    ) -> std::task::Poll<std::io::Result<usize>> {
-        self.send
-            .call1(&JsValue::UNDEFINED, &js_sys::Uint8Array::from(buf).into())
-            .unwrap();
-
-        std::task::Poll::Ready(Ok(buf.len()))
-    }
-
-    fn poll_flush(
-        self: std::pin::Pin<&mut Self>,
-        _cx: &mut std::task::Context<'_>,
-    ) -> std::task::Poll<std::io::Result<()>> {
-        std::task::Poll::Ready(Ok(()))
-    }
-
-    fn poll_close(
-        self: std::pin::Pin<&mut Self>,
-        _cx: &mut std::task::Context<'_>,
-    ) -> std::task::Poll<std::io::Result<()>> {
-        panic!("Not available") // TODO: Ignore instead?
-    }
-}
-
-impl AsyncRead for JsConn {
-    fn poll_read(
-        self: std::pin::Pin<&mut Self>,
-        _cx: &mut std::task::Context<'_>,
-        buf: &mut [u8],
-    ) -> std::task::Poll<std::io::Result<usize>> {
-        let recv_bytes = self
-            .recv
-            .call1(&JsValue::UNDEFINED, &buf.len().into())
-            .unwrap();
-
-        let recv_bytes = js_sys::Uint8Array::from(recv_bytes);
-        let recv_len = recv_bytes.length() as usize;
-        recv_bytes.copy_to(&mut buf[0..recv_len]);
-
-        std::task::Poll::Ready(Ok(recv_len))
-    }
-}
-
-#[derive(Serialize, Deserialize)]
-enum TestMessage {
-    A, B, C
-}
-
 #[wasm_bindgen]
-pub async fn test(
+pub async fn test_alice(
     send: &js_sys::Function,
     recv: &js_sys::Function,
 ) -> Result<JsValue, JsValue> {
-    let conn = JsConn {
-        send: send.clone(),
-        recv: recv.clone(),
-    };
+    let conn = JsConn::new(send, recv);
+    let channel = Bincode.new_framed(conn);
 
-    let mut channel = Bincode.new_framed(conn);
+    // Create an executor and use it to instantiate a vm for garbled circuits.
+    let executor = STExecutor::new(channel);
+    let mut garble_vm = setup_garble::setup_garble(Role::Alice, executor, 256)
+        .await
+        .unwrap();
 
-    channel.send(TestMessage::C).await.unwrap();
+    // Define input and output types.
+    let key = garble_vm.new_private_input::<[u8; 16]>("key").unwrap();
+    let msg = garble_vm.new_blind_input::<[u8; 16]>("msg").unwrap();
+    let ciphertext = garble_vm.new_output::<[u8; 16]>("ciphertext").unwrap();
+
+    // Assign the key.
+    garble_vm
+        .assign(
+            &key,
+            [
+                0x2b_u8, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09,
+                0xcf, 0x4f, 0x3c,
+            ],
+        )
+        .unwrap();
+
+    // Load the AES circuit.
+    let circuit = AES128.clone();
+
+    // Execute the circuit.
+    garble_vm
+        .execute(circuit, &[key, msg], &[ciphertext.clone()])
+        .await
+        .unwrap();
+
+    // Receive output information from Bob.
+    let mut output = garble_vm.decode_private(&[ciphertext]).await.unwrap();
+
+    // Print the encrypted text.
+    let encrypted: [u8; 16] = output.pop().unwrap().try_into().unwrap();
+
+    Ok(format!("Encrypted text is {:x?}", encrypted).into())
+}
+
+#[wasm_bindgen]
+pub async fn test_bob(
+    send: &js_sys::Function,
+    recv: &js_sys::Function,
+) -> Result<JsValue, JsValue> {
+    let conn = JsConn::new(send, recv);
+    let channel = Bincode.new_framed(conn);
+
+    // Create an executor and use it to instantiate a vm for garbled circuits.
+    let executor = STExecutor::new(channel);
+    let mut garble_vm = setup_garble::setup_garble(Role::Bob, executor, 256).await.unwrap();
+
+    // Define input and output types.
+    let key = garble_vm.new_blind_input::<[u8; 16]>("key").unwrap();
+    let msg = garble_vm.new_private_input::<[u8; 16]>("msg").unwrap();
+    let ciphertext = garble_vm.new_output::<[u8; 16]>("ciphertext").unwrap();
+
+    // Assign the message.
+    garble_vm
+        .assign(
+            &msg,
+            [
+                0x6b_u8, 0xc1, 0xbe, 0xe2, 0x2e, 0x40, 0x9f, 0x96, 0xe9, 0x3d, 0x7e, 0x11, 0x73,
+                0x93, 0x17, 0x2a,
+            ],
+        )
+        .unwrap();
+
+    // Load the AES circuit.
+    let circuit = AES128.clone();
+
+    // Execute the circuit.
+    garble_vm
+        .execute(circuit, &[key, msg], &[ciphertext.clone()])
+        .await
+        .unwrap();
+
+    // Send output information to Alice.
+    garble_vm.decode_blind(&[ciphertext]).await.unwrap();
 
     Ok(JsValue::UNDEFINED)
 }

@@ -7,7 +7,14 @@
     "build": "rm -rf dist srcWasm && tsx wasm/build.ts && tsc",
     "test": "mocha --import=tsx tests/**/*.test.ts"
   },
-  "keywords": ["MPC", "multi", "party", "computation", "pse", "cryptography"],
+  "keywords": [
+    "MPC",
+    "multi",
+    "party",
+    "computation",
+    "pse",
+    "cryptography"
+  ],
   "author": "Andrew Morris",
   "repository": {
     "type": "git",
