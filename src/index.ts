@@ -1,3 +1,11 @@
-export type { default as Circuit } from './Circuit';
-export { default as Protocol } from './Protocol';
-export { default as Session } from './Session';
+import { getWasmLib, initWasmLib } from './wasmLib';
+
+export async function init() {
+  await initWasmLib();
+}
+
+export function test(
+  msg: string,
+): string {
+  return getWasmLib().test(msg);
+}

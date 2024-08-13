@@ -1,11 +1,11 @@
 {
   "name": "mpz-ts",
-  "version": "0.1.1",
-  "description": "MPC library backed by privacy-scaling-explorations/mpz",
+  "version": "0.2.0",
+  "description": "Backend for mpc-framework powered by privacy-scaling-explorations/mpz",
   "main": "dist/src/index.js",
   "scripts": {
-    "build": "rm -rf dist && tsc",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "rm -rf dist srcWasm && tsx wasm/build.ts && tsc",
+    "test": "mocha --import=tsx tests/**/*.test.ts"
   },
   "keywords": ["MPC", "multi", "party", "computation", "pse", "cryptography"],
   "author": "Andrew Morris",
@@ -15,6 +15,12 @@
   },
   "license": "MIT",
   "devDependencies": {
+    "@types/chai": "^4.3.16",
+    "@types/mocha": "^10.0.6",
+    "@types/node": "^20.12.11",
+    "chai": "^5.1.1",
+    "mocha": "^10.4.0",
+    "tsx": "^4.9.3",
     "typescript": "^5.4.5"
   }
 }
