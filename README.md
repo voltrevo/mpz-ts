@@ -14,9 +14,9 @@ npm install mpz-ts
 ```
 
 ```ts
-import * as mpz from 'mpz-ts';
+import { MpzBackend } from 'mpz-ts';
 
-const mpzBackend = new mpz.Backend();
+const mpzBackend = new MpzBackend();
 
 // Use with mpc-framework
 // https://github.com/voltrevo/mpc-framework

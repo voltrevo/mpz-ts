@@ -4,8 +4,9 @@ export async function init() {
   await initWasmLib();
 }
 
-export function test(
-  msg: string,
-): string {
-  return getWasmLib().test(msg);
+export async function test(
+  send: (msg: Uint8Array) => void,
+  recv: (maxSize: number) => Uint8Array,
+) {
+  await getWasmLib().test(send, recv);
 }
