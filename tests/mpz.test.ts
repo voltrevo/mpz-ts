@@ -1,19 +1,41 @@
+import { expect } from 'chai';
 import * as mpz from '../src';
 
 describe('mpz', () => {
-  it('test fn', async () => {
+  it.skip('foo', async () => {
+    await mpz.init();
+
+    mpz.startAsyncTask();
+  });
+
+  it.skip('test fn', async () => {
+    await mpz.init();
+
+    const [aliceComms, bobComms] = makeCommsPair();
+
+    console.log('here');
+
+    // const responses = await Promise.all([
+    //   mpz.testAlice(aliceComms.send, aliceComms.recv),
+    //   mpz.testBob(bobComms.send, bobComms.recv),
+    // ]);
+
+    // console.log({ responses });
+
+    // expect(msg).to.deep.eq(Uint8Array.from([0, 0, 0, 4, 2, 0, 0, 0]));
+  });
+
+  it('test send recv', async () => {
     await mpz.init();
 
     const [aliceComms, bobComms] = makeCommsPair();
 
     const responses = await Promise.all([
-      mpz.testAlice(aliceComms.send, aliceComms.recv),
-      mpz.testBob(bobComms.send, bobComms.recv),
+      mpz.testSend(aliceComms.send, aliceComms.recv),
+      mpz.testRecv(bobComms.send, bobComms.recv),
     ]);
 
-    console.log({ responses });
-
-    // expect(msg).to.deep.eq(Uint8Array.from([0, 0, 0, 4, 2, 0, 0, 0]));
+    expect(responses).to.deep.eq([undefined, 'Hi']);
   });
 });
 
@@ -42,6 +64,8 @@ class CommsBuf {
   bufLen = 0;
 
   push(data: Uint8Array) {
+    console.log('push', data);
+
     while (data.length + this.bufLen > this.buf.length) {
       const newBuf = new Uint8Array(2 * this.buf.length);
       newBuf.set(this.buf);
@@ -58,6 +82,7 @@ class CommsBuf {
       this.buf = new Uint8Array(1024);
       this.bufLen = 0;
 
+      console.log('pop', res);
       return res;
     }
 
@@ -67,6 +92,7 @@ class CommsBuf {
     this.buf.copyWithin(0, maxLen, this.bufLen);
     this.bufLen -= maxLen;
 
+    console.log('pop', res);
     return res;
   }
 }

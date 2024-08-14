@@ -180,7 +180,7 @@ dependencies = [
  "futures-core",
  "futures-io",
  "futures-lite 1.13.0",
- "gloo-timers",
+ "gloo-timers 0.2.6",
  "kv-log-macro",
  "log",
  "memchr",
@@ -866,6 +866,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "gloo-timers"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bbb143cf96099802033e0d4f4963b19fd2e0b728bcf076cd9cf7f6634f092994"
+dependencies = [
+ "futures-channel",
+ "futures-core",
+ "js-sys",
+ "wasm-bindgen",
+]
+
+[[package]]
 name = "heck"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1258,6 +1270,7 @@ dependencies = [
  "console_error_panic_hook",
  "futures",
  "getrandom",
+ "gloo-timers 0.3.0",
  "js-sys",
  "mpz-circuits",
  "mpz-common",

@@ -12,7 +12,7 @@ wasm-bindgen-futures = "0.4"
 serde-wasm-bindgen = { version = "0.6.5", serialize_maps_as_objects = true }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-web-sys = { version = "0.3.4" }
+web-sys = { version = "0.3.4", features = ["console"] }
 js-sys = "0.3"
 getrandom = { version = "0.2", features = ["js"] }
 console_error_panic_hook = "0.1.7"
@@ -24,3 +24,4 @@ anyhow = "1"
 mpz-garble = { git = "https://github.com/privacy-scaling-explorations/mpz", rev = "b8ae7ac" }
 mpz-ot = { git = "https://github.com/privacy-scaling-explorations/mpz", rev = "b8ae7ac" }
 mpz-circuits = { git = "https://github.com/privacy-scaling-explorations/mpz", rev = "b8ae7ac" }
+gloo-timers = { version = "0.3.0", features = ["futures"] }
