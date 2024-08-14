@@ -22,16 +22,16 @@ export async function testRecv(
   return await getWasmLib().test_recv(send, recv);
 }
 
-// export async function testAlice(
-//   send: (msg: Uint8Array) => void,
-//   recv: (maxSize: number) => Uint8Array,
-// ) {
-//   await getWasmLib().test_alice(send, recv);
-// }
+export async function testAlice(
+  send: (msg: Uint8Array) => void,
+  recv: (maxSize: number) => Uint8Array,
+) {
+  await getWasmLib().test_alice(send, recv);
+}
 
-// export async function testBob(
-//   send: (msg: Uint8Array) => void,
-//   recv: (maxSize: number) => Uint8Array,
-// ) {
-//   await getWasmLib().test_bob(send, recv);
-// }
+export async function testBob(
+  send: (msg: Uint8Array) => void,
+  recv: (maxSize: number) => Uint8Array,
+) {
+  await getWasmLib().test_bob(send, recv);
+}

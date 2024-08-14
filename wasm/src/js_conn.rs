@@ -1,4 +1,4 @@
-use std::{cmp::min, sync::{mpsc::Receiver, Arc}};
+use std::{cmp::min, sync::{mpsc::Receiver, Arc, Mutex}};
 
 use futures::{AsyncRead, AsyncWrite};
 use wasm_bindgen::JsValue;
@@ -9,7 +9,7 @@ use crate::js_fn_executor::JsFnExecutor;
 pub struct JsConn {
     pub send: JsFnExecutor,
     pub recv: JsFnExecutor,
-    pub buf_receivers: Vec<Receiver<Vec<u8>>>,
+    pub buf_receivers: Vec<Arc<Mutex<Receiver<Vec<u8>>>>>,
     pub recv_buf: Vec<u8>,
 }
 
@@ -30,13 +30,15 @@ impl JsConn {
         let mut recv_count = 0usize;
         
         for receiver in self.buf_receivers.iter() {
-            match receiver.try_recv() {
-                Ok(recv_buf) => {
+            if let Ok(r) = receiver.try_lock() {
+                if let Ok(recv_buf) = r.try_recv() {
                     self.recv_buf.extend(recv_buf);
                     recv_count += 1;
-                },
-                _ => break,
+                    continue;
+                }
             }
+
+            break;
         }
 
         self.buf_receivers.drain(0..recv_count);
@@ -117,7 +119,7 @@ impl AsyncRead for JsConn {
             recv_buf
         });
 
-        self.buf_receivers.push(buf_receiver);
+        self.buf_receivers.push(Arc::new(Mutex::new(buf_receiver)));
 
         std::task::Poll::Pending
     }

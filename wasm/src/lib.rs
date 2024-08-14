@@ -68,97 +68,97 @@ pub async fn test_recv(
     Ok(msg.into())
 }
 
-// #[wasm_bindgen]
-// pub async fn test_alice(
-//     send: &js_sys::Function,
-//     recv: &js_sys::Function,
-// ) -> Result<JsValue, JsValue> {
-//     console::log_1(&"test".into());
+#[wasm_bindgen]
+pub async fn test_alice(
+    send: &js_sys::Function,
+    recv: &js_sys::Function,
+) -> Result<JsValue, JsValue> {
+    console::log_1(&"test".into());
 
-//     let conn = JsConn::new(send, recv);
-//     let channel = Bincode.new_framed(conn);
+    let conn = JsConn::new(send, recv);
+    let channel = Bincode.new_framed(conn);
 
-//     // Create an executor and use it to instantiate a vm for garbled circuits.
-//     let executor = STExecutor::new(channel);
-//     console::log_1(&"test2".into());
-//     let mut garble_vm = setup_garble::setup_garble(Role::Alice, executor, 256)
-//         .await
-//         .unwrap();
-//     console::log_1(&"test3".into());
+    // Create an executor and use it to instantiate a vm for garbled circuits.
+    let executor = STExecutor::new(channel);
+    console::log_1(&"test2".into());
+    let mut garble_vm = setup_garble::setup_garble(Role::Alice, executor, 256)
+        .await
+        .unwrap();
+    console::log_1(&"test3".into());
 
-//     // Define input and output types.
-//     let key = garble_vm.new_private_input::<[u8; 16]>("key").unwrap();
-//     let msg = garble_vm.new_blind_input::<[u8; 16]>("msg").unwrap();
-//     let ciphertext = garble_vm.new_output::<[u8; 16]>("ciphertext").unwrap();
+    // Define input and output types.
+    let key = garble_vm.new_private_input::<[u8; 16]>("key").unwrap();
+    let msg = garble_vm.new_blind_input::<[u8; 16]>("msg").unwrap();
+    let ciphertext = garble_vm.new_output::<[u8; 16]>("ciphertext").unwrap();
 
-//     // Assign the key.
-//     garble_vm
-//         .assign(
-//             &key,
-//             [
-//                 0x2b_u8, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09,
-//                 0xcf, 0x4f, 0x3c,
-//             ],
-//         )
-//         .unwrap();
+    // Assign the key.
+    garble_vm
+        .assign(
+            &key,
+            [
+                0x2b_u8, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 0xab, 0xf7, 0x15, 0x88, 0x09,
+                0xcf, 0x4f, 0x3c,
+            ],
+        )
+        .unwrap();
 
-//     // Load the AES circuit.
-//     let circuit = AES128.clone();
+    // Load the AES circuit.
+    let circuit = AES128.clone();
 
-//     // Execute the circuit.
-//     garble_vm
-//         .execute(circuit, &[key, msg], &[ciphertext.clone()])
-//         .await
-//         .unwrap();
+    // Execute the circuit.
+    garble_vm
+        .execute(circuit, &[key, msg], &[ciphertext.clone()])
+        .await
+        .unwrap();
 
-//     // Receive output information from Bob.
-//     let mut output = garble_vm.decode_private(&[ciphertext]).await.unwrap();
+    // Receive output information from Bob.
+    let mut output = garble_vm.decode_private(&[ciphertext]).await.unwrap();
 
-//     // Print the encrypted text.
-//     let encrypted: [u8; 16] = output.pop().unwrap().try_into().unwrap();
+    // Print the encrypted text.
+    let encrypted: [u8; 16] = output.pop().unwrap().try_into().unwrap();
 
-//     Ok(format!("Encrypted text is {:x?}", encrypted).into())
-// }
+    Ok(format!("Encrypted text is {:x?}", encrypted).into())
+}
 
-// #[wasm_bindgen]
-// pub async fn test_bob(
-//     send: &js_sys::Function,
-//     recv: &js_sys::Function,
-// ) -> Result<JsValue, JsValue> {
-//     let conn = JsConn::new(send, recv);
-//     let channel = Bincode.new_framed(conn);
+#[wasm_bindgen]
+pub async fn test_bob(
+    send: &js_sys::Function,
+    recv: &js_sys::Function,
+) -> Result<JsValue, JsValue> {
+    let conn = JsConn::new(send, recv);
+    let channel = Bincode.new_framed(conn);
 
-//     // Create an executor and use it to instantiate a vm for garbled circuits.
-//     let executor = STExecutor::new(channel);
-//     let mut garble_vm = setup_garble::setup_garble(Role::Bob, executor, 256).await.unwrap();
+    // Create an executor and use it to instantiate a vm for garbled circuits.
+    let executor = STExecutor::new(channel);
+    let mut garble_vm = setup_garble::setup_garble(Role::Bob, executor, 256).await.unwrap();
 
-//     // Define input and output types.
-//     let key = garble_vm.new_blind_input::<[u8; 16]>("key").unwrap();
-//     let msg = garble_vm.new_private_input::<[u8; 16]>("msg").unwrap();
-//     let ciphertext = garble_vm.new_output::<[u8; 16]>("ciphertext").unwrap();
+    // Define input and output types.
+    let key = garble_vm.new_blind_input::<[u8; 16]>("key").unwrap();
+    let msg = garble_vm.new_private_input::<[u8; 16]>("msg").unwrap();
+    let ciphertext = garble_vm.new_output::<[u8; 16]>("ciphertext").unwrap();
 
-//     // Assign the message.
-//     garble_vm
-//         .assign(
-//             &msg,
-//             [
-//                 0x6b_u8, 0xc1, 0xbe, 0xe2, 0x2e, 0x40, 0x9f, 0x96, 0xe9, 0x3d, 0x7e, 0x11, 0x73,
-//                 0x93, 0x17, 0x2a,
-//             ],
-//         )
-//         .unwrap();
+    // Assign the message.
+    garble_vm
+        .assign(
+            &msg,
+            [
+                0x6b_u8, 0xc1, 0xbe, 0xe2, 0x2e, 0x40, 0x9f, 0x96, 0xe9, 0x3d, 0x7e, 0x11, 0x73,
+                0x93, 0x17, 0x2a,
+            ],
+        )
+        .unwrap();
 
-//     // Load the AES circuit.
-//     let circuit = AES128.clone();
+    // Load the AES circuit.
+    let circuit = AES128.clone();
 
-//     // Execute the circuit.
-//     garble_vm
-//         .execute(circuit, &[key, msg], &[ciphertext.clone()])
-//         .await
-//         .unwrap();
+    // Execute the circuit.
+    garble_vm
+        .execute(circuit, &[key, msg], &[ciphertext.clone()])
+        .await
+        .unwrap();
 
-//     // Send output information to Alice.
-//     garble_vm.decode_blind(&[ciphertext]).await.unwrap();
+    // Send output information to Alice.
+    garble_vm.decode_blind(&[ciphertext]).await.unwrap();
 
-//     Ok(JsValue::UNDEFINED)
-// }
+    Ok(JsValue::UNDEFINED)
+}

@@ -8,24 +8,24 @@ describe('mpz', () => {
     mpz.startAsyncTask();
   });
 
-  it.skip('test fn', async () => {
+  it('test fn', async () => {
     await mpz.init();
 
     const [aliceComms, bobComms] = makeCommsPair();
 
     console.log('here');
 
-    // const responses = await Promise.all([
-    //   mpz.testAlice(aliceComms.send, aliceComms.recv),
-    //   mpz.testBob(bobComms.send, bobComms.recv),
-    // ]);
+    const responses = await Promise.all([
+      mpz.testAlice(aliceComms.send, aliceComms.recv),
+      mpz.testBob(bobComms.send, bobComms.recv),
+    ]);
 
-    // console.log({ responses });
+    console.log({ responses });
 
     // expect(msg).to.deep.eq(Uint8Array.from([0, 0, 0, 4, 2, 0, 0, 0]));
   });
 
-  it('test send recv', async () => {
+  it.skip('test send recv', async () => {
     await mpz.init();
 
     const [aliceComms, bobComms] = makeCommsPair();
