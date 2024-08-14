@@ -89,14 +89,14 @@ impl AsyncRead for JsConn {
         cx: &mut std::task::Context<'_>,
         buf: &mut [u8],
     ) -> std::task::Poll<std::io::Result<usize>> {
-        console::log_1(&"read".into());
-
         self.try_empty_buf_receivers();
 
         if !self.recv_buf.is_empty() {
             let len = min(buf.len(), self.recv_buf.len());
             buf[0..len].copy_from_slice(&self.recv_buf[0..len]);
             self.recv_buf.drain(0..len);
+
+            console::log_1(&format!("Received {} bytes", len).into());
 
             return std::task::Poll::Ready(Ok(len));
         }

@@ -82,7 +82,9 @@ class CommsBuf {
       this.buf = new Uint8Array(1024);
       this.bufLen = 0;
 
-      console.log('pop', res);
+      if (res.length > 0) {
+        console.log('pop', res);
+      }
       return res;
     }
 
