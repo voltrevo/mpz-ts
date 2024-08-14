@@ -19,9 +19,10 @@ console_error_panic_hook = "0.1.7"
 
 serio = { version = "0.1", features = ["codec", "bincode"] }
 futures = "0.3"
-mpz-common = { git = "https://github.com/privacy-scaling-explorations/mpz", rev = "b8ae7ac" }
+mpz-common = { path = "/Users/dev/workspaces/ethf/mpz/crates/mpz-common" }
 anyhow = "1"
-mpz-garble = { git = "https://github.com/privacy-scaling-explorations/mpz", rev = "b8ae7ac" }
-mpz-ot = { git = "https://github.com/privacy-scaling-explorations/mpz", rev = "b8ae7ac" }
-mpz-circuits = { git = "https://github.com/privacy-scaling-explorations/mpz", rev = "b8ae7ac" }
+mpz-garble = { path = "/Users/dev/workspaces/ethf/mpz/crates/mpz-garble" }
+mpz-ot = { path = "/Users/dev/workspaces/ethf/mpz/crates/mpz-ot" }
+mpz-circuits = { path = "/Users/dev/workspaces/ethf/mpz/crates/mpz-circuits" }
 gloo-timers = { version = "0.3.0", features = ["futures"] }
+wasm-bindgen-rayon = "1.2"

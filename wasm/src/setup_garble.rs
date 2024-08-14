@@ -62,11 +62,12 @@ pub async fn setup_garble(
     console::log_1(&"test2.5".into());
 
     if let Role::Alice = role {
-        console::log_1(&"blarg".into());
+        console::log_1(&"blarg_a".into());
         sender.setup(&mut context).await?;
         console::log_1(&"test2.5.1a".into());
         sender.preprocess(&mut context).await?;
     } else {
+        console::log_1(&"blarg_b".into());
         receiver.setup(&mut context).await?;
         console::log_1(&"test2.5.1b".into());
         receiver.preprocess(&mut context).await?;

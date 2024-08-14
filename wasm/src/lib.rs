@@ -16,6 +16,8 @@ use wasm_bindgen_futures::spawn_local;
 use web_sys::console;
 use gloo_timers::future::sleep;
 
+pub use wasm_bindgen_rayon::init_thread_pool;
+
 #[wasm_bindgen]
 pub fn init_ext() {
     set_panic_hook();
@@ -45,7 +47,7 @@ pub async fn test_send(
 ) -> Result<JsValue, JsValue> {
     console::log_1(&"test_send".into());
 
-    let conn = JsConn::new(send, recv);
+    let conn = JsConn::new(send, recv, 's');
     let mut channel = Bincode.new_framed(conn);
 
     channel.send("Hi".to_string()).await.unwrap();
@@ -60,7 +62,7 @@ pub async fn test_recv(
 ) -> Result<JsValue, JsValue> {
     console::log_1(&"test_recv".into());
 
-    let conn = JsConn::new(send, recv);
+    let conn = JsConn::new(send, recv, 'r');
     let mut channel = Bincode.new_framed(conn);
 
     let msg = channel.next::<String>().await.unwrap().unwrap();
@@ -75,7 +77,7 @@ pub async fn test_alice(
 ) -> Result<JsValue, JsValue> {
     console::log_1(&"test".into());
 
-    let conn = JsConn::new(send, recv);
+    let conn = JsConn::new(send, recv, 'a');
     let channel = Bincode.new_framed(conn);
 
     // Create an executor and use it to instantiate a vm for garbled circuits.
@@ -125,7 +127,7 @@ pub async fn test_bob(
     send: &js_sys::Function,
     recv: &js_sys::Function,
 ) -> Result<JsValue, JsValue> {
-    let conn = JsConn::new(send, recv);
+    let conn = JsConn::new(send, recv, 'b');
     let channel = Bincode.new_framed(conn);
 
     // Create an executor and use it to instantiate a vm for garbled circuits.

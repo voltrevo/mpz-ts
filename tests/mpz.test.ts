@@ -47,8 +47,8 @@ type Comms = {
 };
 
 function makeCommsPair(): [Comms, Comms] {
-  const a = { recvBuf: new CommsBuf() } as Comms;
-  const b = { recvBuf: new CommsBuf() } as Comms;
+  const a = { recvBuf: new CommsBuf('a') } as Comms;
+  const b = { recvBuf: new CommsBuf('b') } as Comms;
 
   a.send = data => b.recvBuf.push(data);
   a.recv = maxLen => a.recvBuf.pop(maxLen);
@@ -63,8 +63,10 @@ class CommsBuf {
   buf = new Uint8Array(1024);
   bufLen = 0;
 
+  constructor(public name: string) {}
+
   push(data: Uint8Array) {
-    console.log('push', data);
+    console.log(this.name, 'push', data);
 
     while (data.length + this.bufLen > this.buf.length) {
       const newBuf = new Uint8Array(2 * this.buf.length);
@@ -83,7 +85,7 @@ class CommsBuf {
       this.bufLen = 0;
 
       if (res.length > 0) {
-        console.log('pop', res);
+        console.log(this.name, 'pop', res);
       }
       return res;
     }
@@ -94,7 +96,7 @@ class CommsBuf {
     this.buf.copyWithin(0, maxLen, this.bufLen);
     this.bufLen -= maxLen;
 
-    console.log('pop', res);
+    console.log(this.name, 'pop', res);
     return res;
   }
 }

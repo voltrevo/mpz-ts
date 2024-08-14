@@ -21,6 +21,7 @@ export function initWasmLib() {
 
     bindgen.initSync(base64ToUint8Array(wasmBase64));
     bindgen.init_ext();
+    bindgen.initThreadPool((globalThis as any).navigator?.hardwareConcurrency ?? 4);
     lib = bindgen;
 
     return bindgen;
