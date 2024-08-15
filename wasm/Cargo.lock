@@ -393,6 +393,7 @@ dependencies = [
 [[package]]
 name = "clmul"
 version = "0.1.0"
+source = "git+https://github.com/privacy-scaling-explorations/mpz?rev=b8ae7ac#b8ae7acd4e0f306f0c23a9108dd5b802419e48fd"
 dependencies = [
  "bytemuck",
  "cfg-if",
@@ -1053,6 +1054,7 @@ dependencies = [
 [[package]]
 name = "matrix-transpose"
 version = "0.1.0"
+source = "git+https://github.com/privacy-scaling-explorations/mpz?rev=b8ae7ac#b8ae7acd4e0f306f0c23a9108dd5b802419e48fd"
 dependencies = [
  "thiserror",
 ]
@@ -1075,6 +1077,7 @@ dependencies = [
 [[package]]
 name = "mpz-circuits"
 version = "0.1.0"
+source = "git+https://github.com/privacy-scaling-explorations/mpz?rev=b8ae7ac#b8ae7acd4e0f306f0c23a9108dd5b802419e48fd"
 dependencies = [
  "bincode",
  "itybity",
@@ -1091,6 +1094,7 @@ dependencies = [
 [[package]]
 name = "mpz-circuits-macros"
 version = "0.1.0"
+source = "git+https://github.com/privacy-scaling-explorations/mpz?rev=b8ae7ac#b8ae7acd4e0f306f0c23a9108dd5b802419e48fd"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1100,6 +1104,7 @@ dependencies = [
 [[package]]
 name = "mpz-cointoss"
 version = "0.1.0"
+source = "git+https://github.com/privacy-scaling-explorations/mpz?rev=b8ae7ac#b8ae7acd4e0f306f0c23a9108dd5b802419e48fd"
 dependencies = [
  "futures",
  "mpz-cointoss-core",
@@ -1112,6 +1117,7 @@ dependencies = [
 [[package]]
 name = "mpz-cointoss-core"
 version = "0.1.0"
+source = "git+https://github.com/privacy-scaling-explorations/mpz?rev=b8ae7ac#b8ae7acd4e0f306f0c23a9108dd5b802419e48fd"
 dependencies = [
  "mpz-core",
  "opaque-debug",
@@ -1122,6 +1128,7 @@ dependencies = [
 [[package]]
 name = "mpz-common"
 version = "0.1.0"
+source = "git+https://github.com/privacy-scaling-explorations/mpz?rev=b8ae7ac#b8ae7acd4e0f306f0c23a9108dd5b802419e48fd"
 dependencies = [
  "async-trait",
  "cfg-if",
@@ -1140,6 +1147,7 @@ dependencies = [
 [[package]]
 name = "mpz-core"
 version = "0.1.0"
+source = "git+https://github.com/privacy-scaling-explorations/mpz?rev=b8ae7ac#b8ae7acd4e0f306f0c23a9108dd5b802419e48fd"
 dependencies = [
  "aes",
  "bcs",
@@ -1163,6 +1171,7 @@ dependencies = [
 [[package]]
 name = "mpz-garble"
 version = "0.1.0"
+source = "git+https://github.com/privacy-scaling-explorations/mpz?rev=b8ae7ac#b8ae7acd4e0f306f0c23a9108dd5b802419e48fd"
 dependencies = [
  "aes",
  "async-trait",
@@ -1191,6 +1200,7 @@ dependencies = [
 [[package]]
 name = "mpz-garble-core"
 version = "0.1.0"
+source = "git+https://github.com/privacy-scaling-explorations/mpz?rev=b8ae7ac#b8ae7acd4e0f306f0c23a9108dd5b802419e48fd"
 dependencies = [
  "aes",
  "blake3",
@@ -1212,12 +1222,12 @@ dependencies = [
 [[package]]
 name = "mpz-ot"
 version = "0.1.0"
+source = "git+https://github.com/privacy-scaling-explorations/mpz?rev=b8ae7ac#b8ae7acd4e0f306f0c23a9108dd5b802419e48fd"
 dependencies = [
  "async-trait",
  "cfg-if",
  "enum-try-as-inner",
  "futures",
- "gloo-timers 0.3.0",
  "itybity",
  "mpz-cointoss",
  "mpz-common",
@@ -1231,12 +1241,12 @@ dependencies = [
  "serio",
  "thiserror",
  "tlsn-utils-aio",
- "web-sys",
 ]
 
 [[package]]
 name = "mpz-ot-core"
 version = "0.1.0"
+source = "git+https://github.com/privacy-scaling-explorations/mpz?rev=b8ae7ac#b8ae7acd4e0f306f0c23a9108dd5b802419e48fd"
 dependencies = [
  "aes",
  "blake3",

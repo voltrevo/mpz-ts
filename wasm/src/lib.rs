@@ -2,19 +2,14 @@ mod js_fn_executor;
 mod setup_garble;
 mod js_conn;
 
-use std::time::Duration;
-
 use console_error_panic_hook::set_once as set_panic_hook;
 use js_conn::JsConn;
 use mpz_circuits::circuits::AES128;
 use mpz_common::executor::STExecutor;
 use mpz_garble::{DecodePrivate, Execute, Memory};
-use serio::{codec::{Bincode, Codec}, SinkExt, StreamExt};
+use serio::codec::{Bincode, Codec};
 use setup_garble::Role;
 use wasm_bindgen::prelude::*;
-use wasm_bindgen_futures::spawn_local;
-use web_sys::console;
-use gloo_timers::future::sleep;
 
 pub use wasm_bindgen_rayon::init_thread_pool;
 
@@ -24,69 +19,18 @@ pub fn init_ext() {
 }
 
 #[wasm_bindgen]
-pub async fn start_async_task() {
-    // An example async task
-    let future_task = async {
-        // Do some asynchronous work here
-        console::log_1(&"Task is running...".into());
-    };
-
-    // Spawn the future on the local thread
-    spawn_local(future_task);
-
-    sleep(Duration::from_millis(100)).await;
-    // Delay::new(Duration::from_millis(100)).await.unwrap();
-
-    console::log_1(&"Here".into());
-}
-
-#[wasm_bindgen]
-pub async fn test_send(
-    send: &js_sys::Function,
-    recv: &js_sys::Function,
-) -> Result<JsValue, JsValue> {
-    console::log_1(&"test_send".into());
-
-    let conn = JsConn::new(send, recv, 's');
-    let mut channel = Bincode.new_framed(conn);
-
-    channel.send("Hi".to_string()).await.unwrap();
-
-    Ok(JsValue::UNDEFINED)
-}
-
-#[wasm_bindgen]
-pub async fn test_recv(
-    send: &js_sys::Function,
-    recv: &js_sys::Function,
-) -> Result<JsValue, JsValue> {
-    console::log_1(&"test_recv".into());
-
-    let conn = JsConn::new(send, recv, 'r');
-    let mut channel = Bincode.new_framed(conn);
-
-    let msg = channel.next::<String>().await.unwrap().unwrap();
-
-    Ok(msg.into())
-}
-
-#[wasm_bindgen]
 pub async fn test_alice(
     send: &js_sys::Function,
     recv: &js_sys::Function,
 ) -> Result<JsValue, JsValue> {
-    console::log_1(&"test".into());
-
-    let conn = JsConn::new(send, recv, 'a');
+    let conn = JsConn::new(send, recv);
     let channel = Bincode.new_framed(conn);
 
     // Create an executor and use it to instantiate a vm for garbled circuits.
     let executor = STExecutor::new(channel);
-    console::log_1(&"test2".into());
     let mut garble_vm = setup_garble::setup_garble(Role::Alice, executor, 256)
         .await
         .unwrap();
-    console::log_1(&"test3".into());
 
     // Define input and output types.
     let key = garble_vm.new_private_input::<[u8; 16]>("key").unwrap();
@@ -127,7 +71,7 @@ pub async fn test_bob(
     send: &js_sys::Function,
     recv: &js_sys::Function,
 ) -> Result<JsValue, JsValue> {
-    let conn = JsConn::new(send, recv, 'b');
+    let conn = JsConn::new(send, recv);
     let channel = Bincode.new_framed(conn);
 
     // Create an executor and use it to instantiate a vm for garbled circuits.
