@@ -1,11 +1,9 @@
 import * as mpz from './src';
 
 async function main() {
-  await mpz.init();
+  await mpz.init(4);
 
   const [aliceComms, bobComms] = makeCommsPair();
-
-  console.log('here');
 
   const responses = await Promise.all([
     mpz.testAlice(aliceComms.send, aliceComms.recv),
@@ -42,8 +40,6 @@ class CommsBuf {
   constructor(public name: string) {}
 
   push(data: Uint8Array) {
-    console.log(this.name, 'push', data);
-
     while (data.length + this.bufLen > this.buf.length) {
       const newBuf = new Uint8Array(2 * this.buf.length);
       newBuf.set(this.buf);
@@ -55,14 +51,11 @@ class CommsBuf {
   }
 
   pop(maxLen: number) {
-    if (maxLen >= this.buf.length) {
+    if (maxLen >= this.bufLen) {
       const res = this.buf.subarray(0, this.bufLen);
       this.buf = new Uint8Array(1024);
       this.bufLen = 0;
 
-      if (res.length > 0) {
-        console.log(this.name, 'pop', res);
-      }
       return res;
     }
 
@@ -72,7 +65,6 @@ class CommsBuf {
     this.buf.copyWithin(0, maxLen, this.bufLen);
     this.bufLen -= maxLen;
 
-    console.log(this.name, 'pop', res);
     return res;
   }
 }

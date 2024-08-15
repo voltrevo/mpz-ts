@@ -13,7 +13,7 @@ function base64ToUint8Array(base64: string) {
 let promise: Promise<typeof bindgen> | undefined = undefined;
 let lib: typeof bindgen | undefined = undefined;
 
-export function initWasmLib() {
+export function initWasmLib(numThreads: number) {
   promise ??= (async () => {
     const { default: wasmBase64 } = await import(
       '../srcWasm/mpz_ts_wasm_base64',
@@ -21,7 +21,7 @@ export function initWasmLib() {
 
     bindgen.initSync(base64ToUint8Array(wasmBase64));
     bindgen.init_ext();
-    bindgen.initThreadPool((globalThis as any).navigator?.hardwareConcurrency ?? 4);
+    bindgen.initThreadPool(numThreads);
     lib = bindgen;
 
     return bindgen;
