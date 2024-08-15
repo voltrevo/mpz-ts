@@ -6,12 +6,14 @@ async function main() {
 
   const [aliceComms, bobComms] = makeLocalCommsPair();
 
+  const startTime = Date.now();
+
   const responses = await Promise.all([
     mpz.testAlice(aliceComms.send, aliceComms.recv),
     mpz.testBob(bobComms.send, bobComms.recv),
   ]);
 
-  console.log({ responses });
+  console.log(Date.now() - startTime, { responses });
 }
 
 main().catch(console.error);

@@ -2,7 +2,7 @@ export type LocalComms = {
   send(data: Uint8Array): void;
 
   recvBuf: LocalCommsBuf;
-  recv(maxLen: number): Uint8Array;
+  recv(): Uint8Array;
 };
 
 export function makeLocalCommsPair(): [LocalComms, LocalComms] {
@@ -10,10 +10,10 @@ export function makeLocalCommsPair(): [LocalComms, LocalComms] {
   const b = { recvBuf: new LocalCommsBuf() } as LocalComms;
 
   a.send = data => b.recvBuf.push(data);
-  a.recv = maxLen => a.recvBuf.pop(maxLen);
+  a.recv = () => a.recvBuf.pop();
 
   b.send = data => a.recvBuf.push(data);
-  b.recv = maxLen => b.recvBuf.pop(maxLen);
+  b.recv = () => b.recvBuf.pop();
 
   return [a, b];
 }
@@ -35,20 +35,9 @@ export class LocalCommsBuf {
     this.bufLen += data.length;
   }
 
-  pop(maxLen: number) {
-    if (maxLen >= this.bufLen) {
-      const res = this.buf.subarray(0, this.bufLen);
-      this.buf = new Uint8Array(1024);
-      this.bufLen = 0;
-
-      return res;
-    }
-
-    const res = new Uint8Array(maxLen);
-    res.set(this.buf.subarray(0, maxLen));
-
-    this.buf.copyWithin(0, maxLen, this.bufLen);
-    this.bufLen -= maxLen;
+  pop() {
+    const res = this.buf.slice(0, this.bufLen);
+    this.bufLen = 0;
 
     return res;
   }

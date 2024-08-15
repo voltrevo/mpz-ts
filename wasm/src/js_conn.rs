@@ -100,7 +100,7 @@ impl AsyncRead for JsConn {
         let waker = cx.waker().clone();
 
         let buf_receiver = self.recv.execute(move |recv| {
-            let recv_bytes = recv.call1(&JsValue::UNDEFINED, &send_len.into()).unwrap();
+            let recv_bytes = recv.call0(&JsValue::UNDEFINED).unwrap();
 
             let recv_bytes = js_sys::Uint8Array::from(recv_bytes);
             let recv_len = recv_bytes.length() as usize;
