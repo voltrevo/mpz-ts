@@ -1,0 +1,6 @@
+tests
+wasm
+srcWasm/mpz_ts_wasm_base64.js
+dist/srcWasm/mpz_ts_wasm_base64.d.ts
+*.tgz
+.vscode

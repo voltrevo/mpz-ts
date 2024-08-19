@@ -95,8 +95,6 @@ impl AsyncRead for JsConn {
             return std::task::Poll::Ready(Ok(len));
         }
 
-        let send_len = buf.len();
-
         let waker = cx.waker().clone();
 
         let buf_receiver = self.recv.execute(move |recv| {

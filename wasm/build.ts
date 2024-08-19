@@ -1,5 +1,8 @@
 import { spawn } from 'child_process';
 import fs from 'fs/promises';
+import path from 'path';
+import { glob } from 'glob';
+import { rollup } from 'rollup';
 
 process.chdir(__dirname);
 
@@ -17,6 +20,93 @@ async function main() {
   await fs.writeFile('./pkg/mpz_ts_wasm_base64.js', src);
   await fs.unlink('./pkg/.gitignore');
   await fs.rename('./pkg', '../srcWasm');
+
+  await makeWorkerBundle();
+}
+
+async function makeWorkerBundle() {
+  const srcWasmDir = path.resolve(__dirname, path.join('..', 'srcWasm'));
+
+  const workerSrc = globMatch1(
+    `${srcWasmDir}/snippets/**/workerHelpers.worker.js`,
+  );
+
+  await replaceInFile(
+    workerSrc,
+    `from '../../../'`,
+    `from '../../../mpz_ts_wasm'`,
+  );
+
+  const lines = (await fs.readFile(workerSrc, 'utf-8')).split('\n');
+
+  const newLines = lines.map(
+    line => line.replace(`from '../../../'`, `from '../../../mpz_ts_wasm'`),
+  );
+
+  await fs.writeFile(workerSrc, newLines.join('\n'));
+
+  const bundle = await rollup({
+    input: workerSrc,
+  });
+
+  const { output } = await bundle.generate({ format: 'esm' });
+
+  const outputStr = output.map(o => {
+    if (o.type === 'chunk') {
+      return o.code;
+    } else {
+      throw new Error('Unexpected output type');
+    }
+  }).join('\n');
+
+  const workerBinary = Buffer.from(outputStr);
+  const dataUrl = `data:text/javascript;base64,${workerBinary.toString('base64')}`;
+  
+  await fs.writeFile(
+    path.resolve(workerSrc, '../workerUrl.js'),
+    `export default '${dataUrl}';\n`,
+  );
+
+  const workerHelpersSrc = globMatch1(
+    `${srcWasmDir}/snippets/**/workerHelpers.js`,
+  );
+
+  await replaceInFile(
+    workerHelpersSrc,
+    `new URL('./workerHelpers.worker.js', import.meta.url)`,
+    `workerUrl`,
+  );
+
+  const workerHelpersContent = await fs.readFile(workerHelpersSrc, 'utf-8');
+
+  await fs.writeFile(
+    workerHelpersSrc,
+    [
+      `import workerUrl from './workerUrl';`,
+      '',
+      workerHelpersContent,
+    ].join('\n'),
+  );
+}
+
+async function replaceInFile(
+  file: string,
+  pattern: string | RegExp,
+  replacement: string,
+) {
+  const content = await fs.readFile(file, 'utf-8');
+  const newContent = content.replace(pattern, replacement);
+  await fs.writeFile(file, newContent);
+}
+
+function globMatch1(pattern: string) {
+  const matches = glob.sync(pattern);
+
+  if (matches.length !== 1) {
+    throw new Error(`Expected exactly one match for pattern: ${pattern}`);
+  }
+
+  return matches[0];
 }
 
 async function shell(program: string, args: string[]) {
