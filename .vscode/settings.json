@@ -1,8 +1,13 @@
 {
-  "editor.rulers": [80],
+  "editor.rulers": [
+    80
+  ],
   "editor.tabSize": 2,
   "[rust]": {
-    "editor.rulers": [100],
+    "editor.rulers": [
+      100
+    ],
     "editor.tabSize": 4,
-  }
+  },
+  "editor.formatOnSave": true
 }

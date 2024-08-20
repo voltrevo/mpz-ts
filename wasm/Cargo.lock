@@ -331,6 +331,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "bristol-circuit"
+version = "0.1.0"
+source = "git+https://github.com/voltrevo/bristol-circuit?rev=1a4f753#1a4f753c5cb2f4c45491d9ce22ad138afbf92c56"
+dependencies = [
+ "serde",
+ "serde_json",
+ "thiserror",
+]
+
+[[package]]
 name = "bumpalo"
 version = "3.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1276,6 +1286,7 @@ name = "mpz_ts_wasm"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "bristol-circuit",
  "console_error_panic_hook",
  "futures",
  "getrandom",

@@ -2,7 +2,7 @@
 rustflags = ["-C", "target-feature=+atomics,+bulk-memory,+mutable-globals"]
 
 [build]
-target = "aarch64-apple-darwin"
+target = "wasm32-unknown-unknown"
 
 [unstable]
 build-std = ["panic_abort", "std"]
