@@ -28,4 +28,4 @@ gloo-timers = { version = "0.3.0", features = ["futures"] }
 wasm-bindgen-rayon = "1.2"
 
 thiserror = "1.0"
-bristol-circuit = { git = "https://github.com/voltrevo/bristol-circuit", rev = "1a4f753" }
+bristol-circuit = { git = "https://github.com/voltrevo/bristol-circuit", rev = "92b46b9" }
