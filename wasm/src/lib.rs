@@ -1,6 +1,8 @@
 mod js_fn_executor;
 mod setup_garble;
 mod js_conn;
+mod mpz_circuit_from_bristol;
+mod mpz_ts_error;
 
 use console_error_panic_hook::set_once as set_panic_hook;
 use js_conn::JsConn;

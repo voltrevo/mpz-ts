@@ -26,3 +26,5 @@ mpz-ot = { git = "https://github.com/privacy-scaling-explorations/mpz", rev = "b
 mpz-circuits = { git = "https://github.com/privacy-scaling-explorations/mpz", rev = "b8ae7ac" }
 gloo-timers = { version = "0.3.0", features = ["futures"] }
 wasm-bindgen-rayon = "1.2"
+
+thiserror = "1.0"

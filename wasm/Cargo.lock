@@ -1289,6 +1289,7 @@ dependencies = [
  "serde-wasm-bindgen",
  "serde_json",
  "serio",
+ "thiserror",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "wasm-bindgen-rayon",
