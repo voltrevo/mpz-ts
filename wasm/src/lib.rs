@@ -4,11 +4,16 @@ mod mpz_circuit_from_bristol;
 mod mpz_ts_error;
 mod setup_garble;
 
+use bristol_circuit::{BristolCircuit, RawBristolCircuit};
 use console_error_panic_hook::set_once as set_panic_hook;
 use js_conn::JsConn;
-use mpz_circuits::circuits::AES128;
+use js_sys::Reflect;
+use mpz_circuit_from_bristol::mpz_circuit_from_bristol;
+use mpz_circuits::{circuits::AES128, types::Value};
 use mpz_common::executor::STExecutor;
 use mpz_garble::{DecodePrivate, Execute, Memory};
+use mpz_ts_error::MpzTsError;
+use serde_wasm_bindgen::from_value;
 use serio::codec::{Bincode, Codec};
 use setup_garble::Role;
 use wasm_bindgen::prelude::*;
@@ -18,6 +23,96 @@ pub use wasm_bindgen_rayon::init_thread_pool;
 #[wasm_bindgen]
 pub fn init_ext() {
     set_panic_hook();
+}
+
+#[wasm_bindgen]
+pub fn test_eval(circuit: JsValue, inputs: js_sys::Object) -> Result<JsValue, JsError> {
+    let bristol_circuit = BristolCircuit::from_raw(
+        &from_value::<RawBristolCircuit>(circuit).map_err(Into::<MpzTsError>::into)?,
+    )?;
+
+    let ann_circuit = mpz_circuit_from_bristol(&bristol_circuit)?;
+
+    let mut mpz_inputs = Vec::<Value>::new();
+
+    for name in &ann_circuit.input_names {
+        let js_value = Reflect::get(&inputs, &JsValue::from(name))
+            .map_err(|_| JsError::new(&format!("Failed to get input {}", name)))?;
+
+        let value = as_uint(&js_value)?;
+
+        if value > u32::MAX as usize {
+            return Err(JsError::new(&format!("Input {} is too large", name)));
+        }
+
+        mpz_inputs.push(Value::U32(value as u32));
+    }
+
+    let mpz_outputs = ann_circuit.circuit.evaluate(&mpz_inputs)?;
+
+    let outputs = js_sys::Object::new();
+
+    if ann_circuit.output_names.len() != mpz_outputs.len() {
+        return Err(JsError::new("Output count mismatch"));
+    }
+
+    for (name, value) in ann_circuit.output_names.iter().zip(mpz_outputs.iter()) {
+        Reflect::set(
+            &outputs,
+            &JsValue::from(name),
+            &mpz_value_to_js_value(value)?,
+        )
+        .map_err(|_| JsError::new("Failed to set output"))?;
+    }
+
+    Ok(outputs.into())
+}
+
+fn as_uint(js_value: &JsValue) -> Result<usize, JsError> {
+    if js_value.is_undefined() {
+        return Err(JsError::new("Undefined input"));
+    }
+
+    if js_value.is_null() {
+        return Err(JsError::new("Null input"));
+    }
+
+    if let Some(bool) = js_value.as_bool() {
+        return Ok(bool as usize);
+    }
+
+    if let Some(string) = js_value.as_string() {
+        return string
+            .parse()
+            .map_err(|_| JsError::new("Failed to parse string"));
+    }
+
+    if let Some(number) = js_value.as_f64() {
+        return Ok(number as usize);
+    }
+
+    Err(JsError::new("Invalid input"))
+}
+
+fn mpz_value_to_js_value(value: &Value) -> Result<JsValue, MpzTsError> {
+    Ok(match value {
+        Value::Bit(value) => JsValue::from(*value),
+        Value::U8(value) => JsValue::from(*value),
+        Value::U16(value) => JsValue::from(*value),
+        Value::U32(value) => JsValue::from(*value),
+        Value::U64(value) => JsValue::from(*value),
+        Value::U128(value) => JsValue::from(*value),
+        Value::Array(array) => {
+            let js_array = js_sys::Array::new_with_length(array.len() as u32);
+
+            for (i, value) in array.iter().enumerate() {
+                js_array.set(i as u32, mpz_value_to_js_value(value)?);
+            }
+
+            js_array.into()
+        }
+        _ => return Err(MpzTsError::UnexpectedMpzValue),
+    })
 }
 
 #[wasm_bindgen]

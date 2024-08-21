@@ -17,4 +17,6 @@ pub enum MpzTsError {
     MpzCircuitBuilderError(#[from] mpz_circuits::BuilderError),
     #[error(transparent)]
     ParseIntError(#[from] std::num::ParseIntError),
+    #[error("Unexpected value")]
+    UnexpectedMpzValue,
 }
