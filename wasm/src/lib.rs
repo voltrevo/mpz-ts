@@ -1,8 +1,8 @@
-mod js_fn_executor;
-mod setup_garble;
 mod js_conn;
+mod js_fn_executor;
 mod mpz_circuit_from_bristol;
 mod mpz_ts_error;
+mod setup_garble;
 
 use console_error_panic_hook::set_once as set_panic_hook;
 use js_conn::JsConn;
@@ -78,7 +78,9 @@ pub async fn test_bob(
 
     // Create an executor and use it to instantiate a vm for garbled circuits.
     let executor = STExecutor::new(channel);
-    let mut garble_vm = setup_garble::setup_garble(Role::Bob, executor, 256).await.unwrap();
+    let mut garble_vm = setup_garble::setup_garble(Role::Bob, executor, 256)
+        .await
+        .unwrap();
 
     // Define input and output types.
     let key = garble_vm.new_blind_input::<[u8; 16]>("key").unwrap();

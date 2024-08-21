@@ -1,8 +1,6 @@
 use std::{collections::HashMap, ops::BitOr};
 
-use bristol_circuit::{BristolCircuit, Gate, RawBristolCircuit};
-use serde_wasm_bindgen::from_value;
-use wasm_bindgen::JsValue;
+use bristol_circuit::{BristolCircuit, Gate};
 
 use crate::mpz_ts_error::MpzTsError;
 use mpz_circuits::{
@@ -11,10 +9,7 @@ use mpz_circuits::{
     Circuit as MpzCircuit, CircuitBuilder, Tracer,
 };
 
-pub fn mpz_circuit_from_bristol(circuit: JsValue) -> Result<MpzCircuit, MpzTsError> {
-    let raw_circuit = from_value::<RawBristolCircuit>(circuit)?;
-    let circuit = BristolCircuit::from_raw(&raw_circuit)?;
-
+pub fn mpz_circuit_from_bristol(circuit: &BristolCircuit) -> Result<MpzCircuit, MpzTsError> {
     let builder = CircuitBuilder::new();
 
     let mut nodes = HashMap::<usize, Tracer<U32>>::new();
@@ -101,4 +96,57 @@ fn get_binary_io<'a>(
         })?;
 
     Ok((*x, *y, gate.outputs[0]))
+}
+
+#[cfg(test)]
+mod tests {
+    use bristol_circuit::{CircuitInfo, RawBristolCircuit};
+    use mpz_circuits::types::Value;
+
+    use super::*;
+
+    fn clean(src: &str) -> String {
+        src.trim_start()
+            .trim_end_matches(char::is_whitespace)
+            .lines()
+            .map(str::trim)
+            .collect::<Vec<&str>>()
+            .join("\n")
+            + "\n"
+    }
+
+    fn make_a_plus_b() -> BristolCircuit {
+        BristolCircuit::from_raw(&RawBristolCircuit {
+            bristol: clean(
+                "
+                1 3
+                2 1 1
+                1 1
+
+                2 1 0 1 2 AAdd
+            ",
+            ),
+            info: CircuitInfo {
+                input_name_to_wire_index: [("a".to_string(), 0), ("b".to_string(), 1)]
+                    .iter()
+                    .cloned()
+                    .collect(),
+                constants: Default::default(),
+                output_name_to_wire_index: [("c".to_string(), 2)].iter().cloned().collect(),
+            },
+        })
+        .unwrap()
+    }
+
+    #[test]
+    fn test_mpz_circuit_from_bristol() {
+        let circuit = make_a_plus_b();
+        let mpz_circuit = mpz_circuit_from_bristol(&circuit).unwrap();
+
+        let output = mpz_circuit
+            .evaluate(&[Value::U32(3), Value::U32(5)])
+            .unwrap();
+
+        assert_eq!(output, vec![Value::U32(8)]);
+    }
 }
