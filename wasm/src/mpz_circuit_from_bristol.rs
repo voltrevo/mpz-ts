@@ -9,13 +9,24 @@ use mpz_circuits::{
     Circuit as MpzCircuit, CircuitBuilder, Tracer,
 };
 
-pub fn mpz_circuit_from_bristol(circuit: &BristolCircuit) -> Result<MpzCircuit, MpzTsError> {
+pub struct AnnotatedMpzCircuit {
+    pub circuit: MpzCircuit,
+    pub input_names: Vec<String>,
+    pub output_names: Vec<String>,
+}
+
+pub fn mpz_circuit_from_bristol(
+    circuit: &BristolCircuit,
+) -> Result<AnnotatedMpzCircuit, MpzTsError> {
     let builder = CircuitBuilder::new();
 
     let mut nodes = HashMap::<usize, Tracer<U32>>::new();
+    let mut input_names = Vec::<String>::new();
+    let mut output_names = Vec::<String>::new();
 
-    for (_, wire_index) in &circuit.info.input_name_to_wire_index {
+    for (name, wire_index) in &circuit.info.input_name_to_wire_index {
         nodes.insert(*wire_index, builder.add_input::<u32>());
+        input_names.push(name.clone());
     }
 
     for (_, info) in &circuit.info.constants {
@@ -50,7 +61,7 @@ pub fn mpz_circuit_from_bristol(circuit: &BristolCircuit) -> Result<MpzCircuit, 
         }
     }
 
-    for (_, wire_index) in &circuit.info.output_name_to_wire_index {
+    for (name, wire_index) in &circuit.info.output_name_to_wire_index {
         let node = nodes
             .get(wire_index)
             .ok_or_else(|| MpzTsError::OutputWireNotFound {
@@ -58,9 +69,15 @@ pub fn mpz_circuit_from_bristol(circuit: &BristolCircuit) -> Result<MpzCircuit, 
             })?;
 
         builder.add_output(node.clone());
+
+        output_names.push(name.clone());
     }
 
-    Ok(builder.build()?)
+    Ok(AnnotatedMpzCircuit {
+        circuit: builder.build()?,
+        input_names,
+        output_names,
+    })
 }
 
 fn get_binary_io<'a>(
@@ -141,7 +158,7 @@ mod tests {
     #[test]
     fn test_mpz_circuit_from_bristol() {
         let circuit = make_a_plus_b();
-        let mpz_circuit = mpz_circuit_from_bristol(&circuit).unwrap();
+        let mpz_circuit = mpz_circuit_from_bristol(&circuit).unwrap().circuit;
 
         let output = mpz_circuit
             .evaluate(&[Value::U32(3), Value::U32(5)])
