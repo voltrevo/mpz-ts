@@ -59,12 +59,14 @@ async function makeWorkerBundle() {
     }
   }).join('\n');
 
-  const workerBinary = Buffer.from(outputStr);
-  const dataUrl = `data:text/javascript;base64,${workerBinary.toString('base64')}`;
-  
   await fs.writeFile(
     path.resolve(workerSrc, '../workerUrl.js'),
-    `export default '${dataUrl}';\n`,
+    [
+      `const outputStr = ${JSON.stringify(outputStr)};`,
+      `const blob = new Blob([outputStr], { type: 'application/javascript' });`,
+      `export default URL.createObjectURL(blob);`,
+      '',
+    ].join('\n'),
   );
 
   const workerHelpersSrc = globMatch1(
@@ -85,6 +87,7 @@ async function makeWorkerBundle() {
       `import workerUrl from './workerUrl';`,
       '',
       workerHelpersContent,
+      '',
     ].join('\n'),
   );
 }
