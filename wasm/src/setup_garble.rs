@@ -1,7 +1,7 @@
 use anyhow::Error as Anyhow;
 use mpz_common::{Allocate, Context, Preprocess};
+use mpz_garble::config::Role as DEAPRole;
 use mpz_garble::protocol::deap::DEAPThread;
-use mpz_garble::{config::Role as DEAPRole, DecodePrivate, Execute, Memory};
 use mpz_ot::{
     chou_orlandi::{
         Receiver as BaseReceiver, ReceiverConfig as BaseReceiverConfig, Sender as BaseSender,
@@ -23,11 +23,11 @@ pub enum Role {
 /// * `role` - Set up the vm for either Alice or Bob.
 /// * `context` - A context for IO.
 /// * `ot_count` - How many OTs to set up.
-pub async fn setup_garble(
+pub async fn setup_garble<Ctx: Context>(
     role: Role,
-    mut context: impl Context,
+    mut context: Ctx,
     ot_count: usize,
-) -> Result<impl Memory + Execute + DecodePrivate, Anyhow> {
+) -> Result<DEAPThread<Ctx, Sender<BaseReceiver>, Receiver<BaseSender>>, Anyhow> {
     // Create base OT sender and receiver.
     let base_sender_config = BaseSenderConfig::builder().build()?;
     let base_sender = BaseSender::new(base_sender_config);
