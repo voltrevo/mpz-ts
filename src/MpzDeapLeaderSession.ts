@@ -4,6 +4,7 @@ import defer from "./defer";
 import { pack } from "msgpackr";
 import { Keccak } from "sha3";
 import buffersEqual from "./buffersEqual";
+import { init, runDeap } from "./wasmLib";
 
 export default class MpzDeapLeaderSession implements BackendSession {
   peerName: string;
@@ -33,6 +34,8 @@ export default class MpzDeapLeaderSession implements BackendSession {
   }
 
   async run() {
+    const initPromise = init(2);
+
     const setupHash = new Keccak().update(
       pack([this.circuit, this.mpcSettings])
     ).digest();
@@ -45,7 +48,17 @@ export default class MpzDeapLeaderSession implements BackendSession {
       throw new Error("Setup hash mismatch: check peer settings match");
     }
 
-    throw new Error("todo: implement me");
+    await initPromise;
+
+    const res = await runDeap(
+      this.circuit,
+      this.input,
+      true,
+      (msg: Uint8Array) => this.send(this.peerName, msg),
+      () => this.msgQueue.tryPop()?.value ?? new Uint8Array(),
+    );
+
+    this.result.resolve(res);
   }
 
   output(): Promise<Record<string, unknown>> {

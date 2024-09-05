@@ -4,6 +4,8 @@ mod mpz_circuit_from_bristol;
 mod mpz_ts_error;
 mod setup_garble;
 
+use std::sync::Arc;
+
 use bristol_circuit::{BristolCircuit, RawBristolCircuit};
 use console_error_panic_hook::set_once as set_panic_hook;
 use js_conn::JsConn;
@@ -11,7 +13,7 @@ use js_sys::Reflect;
 use mpz_circuit_from_bristol::mpz_circuit_from_bristol;
 use mpz_circuits::{circuits::AES128, types::Value};
 use mpz_common::executor::STExecutor;
-use mpz_garble::{DecodePrivate, Execute, Memory};
+use mpz_garble::{value::ValueRef, Decode, DecodePrivate, Execute, Memory};
 use mpz_ts_error::MpzTsError;
 use serde_wasm_bindgen::from_value;
 use serio::codec::{Bincode, Codec};
@@ -23,6 +25,88 @@ pub use wasm_bindgen_rayon::init_thread_pool;
 #[wasm_bindgen]
 pub fn init_ext() {
     set_panic_hook();
+}
+
+#[wasm_bindgen]
+pub async fn run_deap(
+    circuit: JsValue,
+    inputs: js_sys::Object,
+    is_leader: bool,
+    send: &js_sys::Function,
+    recv: &js_sys::Function,
+) -> Result<JsValue, JsError> {
+    let bristol_circuit = BristolCircuit::from_raw(
+        &from_value::<RawBristolCircuit>(circuit).map_err(Into::<MpzTsError>::into)?,
+    )?;
+
+    let ann_circuit = mpz_circuit_from_bristol(&bristol_circuit)?;
+
+    let conn = JsConn::new(send, recv);
+    let channel = Bincode.new_framed(conn);
+
+    let role = if is_leader { Role::Alice } else { Role::Bob };
+
+    // Create an executor and use it to instantiate a vm for garbled circuits.
+    let executor = STExecutor::new(channel);
+
+    let mut garble_vm =
+        setup_garble::setup_garble(role, executor, 32 * ann_circuit.input_names.len())
+            .await
+            .unwrap();
+
+    let mut garble_inputs = Vec::<ValueRef>::new();
+
+    for input_name in &ann_circuit.input_names {
+        let input_value = js_sys::Reflect::get(&inputs, &JsValue::from(input_name))
+            .map_err(|_| JsError::new("input lookup threw exception"))?;
+
+        if input_value.is_undefined() {
+            garble_inputs.push(garble_vm.new_blind_input::<u32>(input_name)?);
+        } else {
+            let input_value = as_uint(&input_value)?;
+
+            if input_value > u32::MAX as usize {
+                return Err(JsError::new(&format!("Input {} is too large", input_name)));
+            }
+
+            let value_ref = garble_vm.new_private_input::<u32>(input_name)?;
+
+            garble_vm.assign(&value_ref, input_value as u32)?;
+            garble_inputs.push(value_ref);
+        }
+    }
+
+    let mut garble_outputs = Vec::<ValueRef>::new();
+
+    for output_name in &ann_circuit.output_names {
+        garble_outputs.push(garble_vm.new_output::<u32>(output_name)?);
+    }
+
+    // Execute the circuit.
+    garble_vm
+        .execute(
+            Arc::new(ann_circuit.circuit),
+            &garble_inputs,
+            &garble_outputs,
+        )
+        .await
+        .unwrap();
+
+    // Decode outputs
+    let outputs = garble_vm.decode(&garble_outputs).await.unwrap();
+
+    let result = js_sys::Object::new();
+
+    for (name, value) in ann_circuit.output_names.iter().zip(outputs.iter()) {
+        Reflect::set(
+            &result,
+            &JsValue::from(name),
+            &mpz_value_to_js_value(value)?,
+        )
+        .map_err(|_| JsError::new("Failed to set output"))?;
+    }
+
+    Ok(result.into())
 }
 
 #[wasm_bindgen]
