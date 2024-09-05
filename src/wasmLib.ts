@@ -1,3 +1,4 @@
+import { Circuit } from 'mpc-framework-common';
 import * as bindgen from '../srcWasm/mpz_ts_wasm';
 
 function base64ToUint8Array(base64: string) {
@@ -13,7 +14,7 @@ function base64ToUint8Array(base64: string) {
 let promise: Promise<typeof bindgen> | undefined = undefined;
 let lib: typeof bindgen | undefined = undefined;
 
-export function initWasmLib(numThreads: number) {
+export function init(numThreads: number) {
   promise ??= (async () => {
     const { default: wasmBase64 } = await import(
       '../srcWasm/mpz_ts_wasm_base64',
@@ -27,13 +28,34 @@ export function initWasmLib(numThreads: number) {
     return bindgen;
   })();
 
-  return promise;
+  return promise.then(() => { });
 }
 
-export function getWasmLib() {
+function getWasmLib() {
   if (lib === undefined) {
     throw new Error('lib not initialized, call mpz.init() first');
   }
 
   return lib;
+}
+
+export function testEval(
+  circuit: Circuit,
+  inputs: Record<string, unknown>,
+): Record<string, unknown> {
+  return getWasmLib().test_eval(circuit, inputs);
+}
+
+export async function testAlice(
+  send: (msg: Uint8Array) => void,
+  recv: () => Uint8Array,
+) {
+  return await getWasmLib().test_alice(send, recv);
+}
+
+export async function testBob(
+  send: (msg: Uint8Array) => void,
+  recv: () => Uint8Array,
+) {
+  return await getWasmLib().test_bob(send, recv);
 }

@@ -1,16 +1,16 @@
-import * as mpz from './src';
+import * as mpzWasm from './src/wasmLib';
 import { makeLocalCommsPair } from './tests/helpers/LocalComms';
 
 async function main() {
-  await mpz.init(4);
+  await mpzWasm.init(4);
 
   const [aliceComms, bobComms] = makeLocalCommsPair();
 
   const startTime = Date.now();
 
   const responses = await Promise.all([
-    mpz.testAlice(aliceComms.send, aliceComms.recv),
-    mpz.testBob(bobComms.send, bobComms.recv),
+    mpzWasm.testAlice(aliceComms.send, aliceComms.recv),
+    mpzWasm.testBob(bobComms.send, bobComms.recv),
   ]);
 
   console.log(Date.now() - startTime, { responses });
