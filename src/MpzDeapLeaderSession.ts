@@ -1,6 +1,9 @@
 import { BackendSession, Circuit, MpcSettings } from "mpc-framework-common";
 import AsyncQueue from "./AsyncQueue";
 import defer from "./defer";
+import { pack } from "msgpackr";
+import { Keccak } from "sha3";
+import buffersEqual from "./buffersEqual";
 
 export default class MpzDeapLeaderSession implements BackendSession {
   peerName: string;
@@ -30,6 +33,18 @@ export default class MpzDeapLeaderSession implements BackendSession {
   }
 
   async run() {
+    const setupHash = new Keccak().update(
+      pack([this.circuit, this.mpcSettings])
+    ).digest();
+
+    this.send(this.peerName, setupHash);
+
+    const msg = await this.msgQueue.pop();
+
+    if (!buffersEqual(msg, setupHash)) {
+      throw new Error("Setup hash mismatch: check peer settings match");
+    }
+
     throw new Error("todo: implement me");
   }
 
