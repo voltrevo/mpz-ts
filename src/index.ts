@@ -1,4 +1,4 @@
-import { Circuit } from './frameworkTypes';
+import { Circuit } from 'mpc-framework-common';
 import { getWasmLib, initWasmLib } from './wasmLib';
 
 export async function init(numThreads: number) {
