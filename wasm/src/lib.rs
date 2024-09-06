@@ -49,10 +49,14 @@ pub async fn run_deap(
     // Create an executor and use it to instantiate a vm for garbled circuits.
     let executor = STExecutor::new(channel);
 
-    let mut garble_vm =
-        setup_garble::setup_garble(role, executor, 32 * ann_circuit.input_names.len())
-            .await
-            .unwrap();
+    let mut garble_vm = setup_garble::setup_garble(
+        role,
+        executor,
+        // FIXME: Fix calculation. Seems to work with only 1 OT.
+        32 * ann_circuit.input_names.len(),
+    )
+    .await
+    .unwrap();
 
     let mut garble_inputs = Vec::<ValueRef>::new();
 
