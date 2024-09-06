@@ -1,6 +1,5 @@
-import MpzDeapLeaderSession from "./MpzDeapLeaderSession";
-import MpzDeapFollowerSession from "./MpzDeapFollowerSession";
 import { Backend, BackendSession, checkSettingsValid, Circuit, MpcSettings } from "mpc-framework-common";
+import MpzDeapSession from "./MpzDeapSession";
 
 export default class MpzDeapBackend implements Backend {
   run(
@@ -22,24 +21,16 @@ export default class MpzDeapBackend implements Backend {
     const leaderName = mpcSettings[0].name ?? "0";
     const followerName = mpcSettings[1].name ?? "1";
 
-    if (name === leaderName) {
-      return new MpzDeapLeaderSession(
-        circuit,
-        mpcSettings,
-        input,
-        send,
-      );
-    }
-
-    if (name !== followerName) {
+    if (name !== leaderName && name !== followerName) {
       throw new Error(`Unknown participant name: ${name}`);
     }
 
-    return new MpzDeapFollowerSession(
+    return new MpzDeapSession(
       circuit,
       mpcSettings,
       input,
       send,
+      name === leaderName,
     );
   }
 }

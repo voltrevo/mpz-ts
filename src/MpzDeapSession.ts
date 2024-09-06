@@ -1,12 +1,12 @@
 import { BackendSession, Circuit, MpcSettings } from "mpc-framework-common";
 import AsyncQueue from "./AsyncQueue";
 import defer from "./defer";
-import { Keccak } from "sha3";
 import { pack } from "msgpackr";
+import { Keccak } from "sha3";
 import buffersEqual from "./buffersEqual";
 import { init, runDeap } from "./wasmLib";
 
-export default class MpzDeapFollowerSession implements BackendSession {
+export default class MpzDeapSession implements BackendSession {
   peerName: string;
   msgQueue = new AsyncQueue<Uint8Array>();
   result = defer<Record<string, unknown>>();
@@ -16,8 +16,9 @@ export default class MpzDeapFollowerSession implements BackendSession {
     public mpcSettings: MpcSettings,
     public input: Record<string, unknown>,
     public send: (to: string, msg: Uint8Array) => void,
+    public isLeader: boolean,
   ) {
-    this.peerName = mpcSettings[0].name ?? "0";
+    this.peerName = mpcSettings[isLeader ? 1 : 0].name ?? (isLeader ? "1" : "0");
 
     this.run().catch(err => {
       this.result.reject(err);
@@ -53,7 +54,7 @@ export default class MpzDeapFollowerSession implements BackendSession {
     const res = await runDeap(
       this.circuit,
       this.input,
-      false,
+      this.isLeader,
       (msg: Uint8Array) => this.send(this.peerName, msg),
       () => this.msgQueue.tryPop()?.value ?? new Uint8Array(),
     );
