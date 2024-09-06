@@ -1,3 +1,5 @@
+import { EventEmitter } from 'ee-typed';
+
 export type LocalComms = {
   send(data: Uint8Array): void;
 
@@ -18,11 +20,13 @@ export function makeLocalCommsPair(): [LocalComms, LocalComms] {
   return [a, b];
 }
 
-export class LocalCommsBuf {
+export class LocalCommsBuf extends EventEmitter<{ data(data: Uint8Array): void }> {
   buf = new Uint8Array(1024);
   bufLen = 0;
 
-  constructor() {}
+  constructor() {
+    super();
+  }
 
   push(data: Uint8Array) {
     while (data.length + this.bufLen > this.buf.length) {
@@ -33,6 +37,8 @@ export class LocalCommsBuf {
 
     this.buf.set(data, this.bufLen);
     this.bufLen += data.length;
+
+    this.emit('data', data);
   }
 
   pop() {

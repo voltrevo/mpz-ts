@@ -26,9 +26,12 @@
     "@types/mocha": "^10.0.6",
     "@types/node": "^20.12.11",
     "chai": "^5.1.1",
+    "ee-typed": "^0.1.0",
     "glob": "^11.0.0",
     "mocha": "^10.4.0",
+    "mpc-framework": "^0.1.1",
     "rollup": "^4.21.0",
+    "summon-ts": "^0.1.0",
     "tsx": "^4.9.3",
     "typescript": "^5.4.5"
   },
