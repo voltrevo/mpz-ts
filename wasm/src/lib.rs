@@ -53,37 +53,37 @@ pub async fn run_semi_honest(
         role,
         executor,
         // FIXME: Fix calculation. Seems to work with only 1 OT.
-        32 * ann_circuit.input_names.len(),
+        32 * ann_circuit.inputs.len(),
     )
     .await
     .unwrap();
 
     let mut garble_inputs = Vec::<ValueRef>::new();
 
-    for input_name in &ann_circuit.input_names {
+    for (input_name, input_width) in &ann_circuit.inputs {
         let input_value = js_sys::Reflect::get(&inputs, &JsValue::from(input_name))
             .map_err(|_| JsError::new("input lookup threw exception"))?;
 
         if input_value.is_undefined() {
-            garble_inputs.push(garble_vm.new_blind_input::<u32>(input_name)?);
+            garble_inputs.push(garble_vm.new_blind_array_input::<bool>(&input_name, *input_width)?);
         } else {
             let input_value = as_uint(&input_value)?;
 
-            if input_value > u32::MAX as usize {
-                return Err(JsError::new(&format!("Input {} is too large", input_name)));
-            }
+            let value_ref = garble_vm.new_private_array_input::<bool>(&input_name, *input_width)?;
 
-            let value_ref = garble_vm.new_private_input::<u32>(input_name)?;
+            garble_vm.assign(
+                &value_ref,
+                usize_to_mpz_bit_array(input_value, *input_width),
+            )?;
 
-            garble_vm.assign(&value_ref, input_value as u32)?;
             garble_inputs.push(value_ref);
         }
     }
 
     let mut garble_outputs = Vec::<ValueRef>::new();
 
-    for output_name in &ann_circuit.output_names {
-        garble_outputs.push(garble_vm.new_output::<u32>(output_name)?);
+    for (output_name, output_width) in &ann_circuit.outputs {
+        garble_outputs.push(garble_vm.new_array_output::<bool>(&output_name, *output_width)?);
     }
 
     // Execute the circuit.
@@ -101,16 +101,46 @@ pub async fn run_semi_honest(
 
     let result = js_sys::Object::new();
 
-    for (name, value) in ann_circuit.output_names.iter().zip(outputs.iter()) {
+    for ((name, _), value) in ann_circuit.outputs.iter().zip(outputs.iter()) {
         Reflect::set(
             &result,
             &JsValue::from(name),
-            &mpz_value_to_js_value(value)?,
+            &JsValue::from(mpz_bit_array_to_usize(value)),
         )
         .map_err(|_| JsError::new("Failed to set output"))?;
     }
 
     Ok(result.into())
+}
+
+fn usize_to_mpz_bit_array(value: usize, width: usize) -> Value {
+    Value::Array(
+        (0..width)
+            .rev()
+            .map(|j| Value::Bit((value & (1 << j)) != 0))
+            .collect(),
+    )
+}
+
+fn mpz_bit_array_to_usize(value: &Value) -> usize {
+    let bits = match value {
+        Value::Array(bits) => bits,
+        _ => panic!("Expected bit array"),
+    };
+
+    let mut res = 0;
+
+    for (i, b) in bits.iter().rev().enumerate() {
+        let b = match b {
+            Value::Bit(false) => 0,
+            Value::Bit(true) => 1,
+            _ => panic!("Expected bit"),
+        };
+
+        res += b << i;
+    }
+
+    res
 }
 
 #[wasm_bindgen]
@@ -123,32 +153,27 @@ pub fn test_eval(circuit: JsValue, inputs: js_sys::Object) -> Result<JsValue, Js
 
     let mut mpz_inputs = Vec::<Value>::new();
 
-    for name in &ann_circuit.input_names {
+    for (name, width) in &ann_circuit.inputs {
         let js_value = Reflect::get(&inputs, &JsValue::from(name))
             .map_err(|_| JsError::new(&format!("Failed to get input {}", name)))?;
 
         let value = as_uint(&js_value)?;
-
-        if value > u32::MAX as usize {
-            return Err(JsError::new(&format!("Input {} is too large", name)));
-        }
-
-        mpz_inputs.push(Value::U32(value as u32));
+        mpz_inputs.push(usize_to_mpz_bit_array(value, *width));
     }
 
     let mpz_outputs = ann_circuit.circuit.evaluate(&mpz_inputs)?;
 
     let outputs = js_sys::Object::new();
 
-    if ann_circuit.output_names.len() != mpz_outputs.len() {
+    if ann_circuit.outputs.len() != mpz_outputs.len() {
         return Err(JsError::new("Output count mismatch"));
     }
 
-    for (name, value) in ann_circuit.output_names.iter().zip(mpz_outputs.iter()) {
+    for ((name, _), value) in ann_circuit.outputs.iter().zip(mpz_outputs.iter()) {
         Reflect::set(
             &outputs,
             &JsValue::from(name),
-            &mpz_value_to_js_value(value)?,
+            &JsValue::from(mpz_bit_array_to_usize(value)),
         )
         .map_err(|_| JsError::new("Failed to set output"))?;
     }
@@ -182,6 +207,7 @@ fn as_uint(js_value: &JsValue) -> Result<usize, JsError> {
     Err(JsError::new("Invalid input"))
 }
 
+#[allow(dead_code)]
 fn mpz_value_to_js_value(value: &Value) -> Result<JsValue, MpzTsError> {
     Ok(match value {
         Value::Bit(value) => JsValue::from(*value),

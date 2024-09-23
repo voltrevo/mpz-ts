@@ -1,18 +1,14 @@
-use std::{collections::HashMap, ops::BitOr};
+use std::collections::HashMap;
 
 use bristol_circuit::{BristolCircuit, Gate};
 
 use crate::mpz_ts_error::MpzTsError;
-use mpz_circuits::{
-    ops::{WrappingAdd, WrappingSub},
-    types::U32,
-    Circuit as MpzCircuit, CircuitBuilder, Tracer,
-};
+use mpz_circuits::{types::Bit, Circuit as MpzCircuit, CircuitBuilder, Tracer};
 
 pub struct AnnotatedMpzCircuit {
     pub circuit: MpzCircuit,
-    pub input_names: Vec<String>,
-    pub output_names: Vec<String>,
+    pub inputs: Vec<(String, usize)>,
+    pub outputs: Vec<(String, usize)>,
 }
 
 pub fn mpz_circuit_from_bristol(
@@ -20,38 +16,81 @@ pub fn mpz_circuit_from_bristol(
 ) -> Result<AnnotatedMpzCircuit, MpzTsError> {
     let builder = CircuitBuilder::new();
 
-    let mut nodes = HashMap::<usize, Tracer<U32>>::new();
-    let mut input_names = Vec::<String>::new();
-    let mut output_names = Vec::<String>::new();
+    let (input_widths, output_widths) = match &circuit.io_widths {
+        Some(io_widths) => io_widths,
+        None => return Err(MpzTsError::ArithmeticCircuitNotSupported),
+    };
 
-    for (name, wire_index) in &circuit.info.input_name_to_wire_index {
-        nodes.insert(*wire_index, builder.add_input::<u32>());
-        input_names.push(name.clone());
+    if !circuit.info.constants.is_empty() {
+        // Only arithmetic circuits have constants
+        return Err(MpzTsError::ArithmeticCircuitNotSupported);
     }
 
-    for (_, info) in &circuit.info.constants {
-        nodes.insert(
-            info.wire_index,
-            builder.get_constant::<u32>(info.value.parse()?),
-        );
+    let mut ordered_input_names = circuit
+        .info
+        .input_name_to_wire_index
+        .iter()
+        .map(|(name, i)| (name.clone(), i.clone()))
+        .collect::<Vec<_>>();
+
+    ordered_input_names.sort_by(|(_, i), (_, j)| i.cmp(j));
+
+    if ordered_input_names.len() != input_widths.len() {
+        return Err(MpzTsError::IoMismatch);
+    }
+
+    let mut ordered_output_names = circuit
+        .info
+        .output_name_to_wire_index
+        .iter()
+        .map(|(name, i)| (name.clone(), i.clone()))
+        .collect::<Vec<_>>();
+
+    ordered_output_names.sort_by(|(_, i), (_, j)| i.cmp(j));
+
+    if ordered_output_names.len() != output_widths.len() {
+        return Err(MpzTsError::IoMismatch);
+    }
+
+    let mut nodes = HashMap::<usize, Tracer<Bit>>::new();
+    let mut inputs = Vec::<(String, usize)>::new();
+    let mut outputs = Vec::<(String, usize)>::new();
+
+    for (i, (name, wire_index)) in ordered_input_names.iter().enumerate() {
+        let width = input_widths[i];
+
+        for (j, tracer_bit) in builder.add_vec_input::<bool>(width).iter().enumerate() {
+            nodes.insert(*wire_index + j, tracer_bit.clone());
+        }
+
+        inputs.push((name.clone(), width));
     }
 
     for gate in &circuit.gates {
         match gate.op.as_str() {
-            "AAdd" => {
+            "AND" => {
                 let (x, y, z_index) = get_binary_io(gate, &nodes)?;
-                let z = x.wrapping_add(y);
+                let z = x & y;
                 nodes.insert(z_index, z);
             }
-            "ASub" => {
+            "XOR" => {
                 let (x, y, z_index) = get_binary_io(gate, &nodes)?;
-                let z = x.wrapping_sub(y);
+                let z = x ^ y;
                 nodes.insert(z_index, z);
             }
-            "ABitOr" => {
+            "OR" => {
                 let (x, y, z_index) = get_binary_io(gate, &nodes)?;
-                let z = x.bitor(y);
+                let z = x | y;
                 nodes.insert(z_index, z);
+            }
+            "NOT" => {
+                let (x, out_index) = get_unary_io(gate, &nodes)?;
+                let out = !x;
+                nodes.insert(out_index, out);
+            }
+            "COPY" => {
+                let (x, out_index) = get_unary_io(gate, &nodes)?;
+                nodes.insert(out_index, x);
             }
             _ => {
                 return Err(MpzTsError::UnsupportedOp {
@@ -61,29 +100,39 @@ pub fn mpz_circuit_from_bristol(
         }
     }
 
-    for (name, wire_index) in &circuit.info.output_name_to_wire_index {
-        let node = nodes
-            .get(wire_index)
-            .ok_or_else(|| MpzTsError::OutputWireNotFound {
-                wire_index: *wire_index,
-            })?;
+    for (i, (name, wire_index)) in ordered_output_names.iter().enumerate() {
+        let width = output_widths[i];
 
-        builder.add_output(node.clone());
+        let mut bit_nodes = Vec::<Tracer<'_, Bit>>::new();
 
-        output_names.push(name.clone());
+        for j in 0..width {
+            let wire_index_j = *wire_index + j;
+
+            let node = nodes
+                .get(&wire_index_j)
+                .ok_or_else(|| MpzTsError::OutputWireNotFound {
+                    wire_index: wire_index_j,
+                })?;
+
+            bit_nodes.push(node.clone())
+        }
+
+        builder.add_output(bit_nodes);
+
+        outputs.push((name.clone(), width));
     }
 
     Ok(AnnotatedMpzCircuit {
         circuit: builder.build()?,
-        input_names,
-        output_names,
+        inputs,
+        outputs,
     })
 }
 
 fn get_binary_io<'a>(
     gate: &Gate,
-    nodes: &HashMap<usize, Tracer<'a, U32>>,
-) -> Result<(Tracer<'a, U32>, Tracer<'a, U32>, usize), MpzTsError> {
+    nodes: &HashMap<usize, Tracer<'a, Bit>>,
+) -> Result<(Tracer<'a, Bit>, Tracer<'a, Bit>, usize), MpzTsError> {
     if gate.inputs.len() != 2 {
         return Err(MpzTsError::InvalidGate {
             gate: gate.clone(),
@@ -113,6 +162,34 @@ fn get_binary_io<'a>(
         })?;
 
     Ok((*x, *y, gate.outputs[0]))
+}
+
+fn get_unary_io<'a>(
+    gate: &Gate,
+    nodes: &HashMap<usize, Tracer<'a, Bit>>,
+) -> Result<(Tracer<'a, Bit>, usize), MpzTsError> {
+    if gate.inputs.len() != 1 {
+        return Err(MpzTsError::InvalidGate {
+            gate: gate.clone(),
+            message: "Unary gate must have exactly 1 input".into(),
+        });
+    }
+
+    if gate.outputs.len() != 1 {
+        return Err(MpzTsError::InvalidGate {
+            gate: gate.clone(),
+            message: "Unary gate must have exactly 1 output".into(),
+        });
+    }
+
+    let x = nodes
+        .get(&gate.inputs[0])
+        .ok_or_else(|| MpzTsError::InvalidGate {
+            gate: gate.clone(),
+            message: "Input wire not found".into(),
+        })?;
+
+    Ok((*x, gate.outputs[0]))
 }
 
 #[cfg(test)]

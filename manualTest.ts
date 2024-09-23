@@ -11,7 +11,7 @@ async function main() {
 
   const [aliceComms, bobComms] = makeLocalCommsPair();
 
-  const circuit = summon.compile('/src/main.ts', {
+  const circuit = summon.compileBoolean('/src/main.ts', 8, {
     '/src/main.ts': `
       export default function main(a: number, b: number) {
         return a + b;

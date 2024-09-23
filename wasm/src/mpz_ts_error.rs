@@ -19,4 +19,8 @@ pub enum MpzTsError {
     ParseIntError(#[from] std::num::ParseIntError),
     #[error("Unexpected value")]
     UnexpectedMpzValue,
+    #[error("Arithmetic circuit not supported (boolean circuits only)")]
+    ArithmeticCircuitNotSupported,
+    #[error("Bristol string and circuit info report different numbers of inputs and/or outputs")]
+    IoMismatch,
 }
