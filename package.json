@@ -1,6 +1,6 @@
 {
   "name": "mpz-ts",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Backend for mpc-framework powered by privacy-scaling-explorations/mpz",
   "main": "dist/src/index.js",
   "scripts": {
@@ -31,13 +31,13 @@
     "mocha": "^10.4.0",
     "mpc-framework": "^0.1.1",
     "rollup": "^4.21.0",
-    "summon-ts": "^0.2.0",
     "tsx": "^4.9.3",
     "typescript": "^5.4.5"
   },
   "dependencies": {
     "mpc-framework-common": "^0.1.0",
     "msgpackr": "^1.11.0",
-    "sha3": "^2.1.4"
+    "sha3": "^2.1.4",
+    "summon-ts": "^0.2.1"
   }
 }
