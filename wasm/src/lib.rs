@@ -28,7 +28,7 @@ pub fn init_ext() {
 }
 
 #[wasm_bindgen]
-pub async fn run_deap(
+pub async fn run_semi_honest(
     circuit: JsValue,
     inputs: js_sys::Object,
     is_leader: bool,

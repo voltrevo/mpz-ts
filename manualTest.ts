@@ -4,7 +4,7 @@ import * as summon from 'summon-ts';
 import { LocalComms, makeLocalCommsPair } from './tests/helpers/LocalComms';
 import { Protocol } from 'mpc-framework';
 import { assert } from 'console';
-import { MpzDeapBackend } from './src';
+import { MpzSemiHonestBackend } from './src';
 
 async function main() {
   await summon.init();
@@ -35,7 +35,7 @@ async function main() {
   const protocol = new mpcf.Protocol(
     circuit,
     mpcSettings,
-    new MpzDeapBackend(),
+    new MpzSemiHonestBackend(),
   );
 
   const startTime = Date.now();

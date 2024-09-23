@@ -1,3 +1,3 @@
-import MpzDeapBackend from "./MpzDeapBackend";
+import MpzSemiHonestBackend from "./MpzSemiHonestBackend";
 
-export { MpzDeapBackend };
+export { MpzSemiHonestBackend };

@@ -4,9 +4,9 @@ import defer from "./defer";
 import { pack } from "msgpackr";
 import { Keccak } from "sha3";
 import buffersEqual from "./buffersEqual";
-import { init, runDeap } from "./wasmLib";
+import { init, runSemiHonest } from "./wasmLib";
 
-export default class MpzDeapSession implements BackendSession {
+export default class MpzSemiHonestSession implements BackendSession {
   peerName: string;
   msgQueue = new AsyncQueue<Uint8Array>();
   result = defer<Record<string, unknown>>();
@@ -51,7 +51,7 @@ export default class MpzDeapSession implements BackendSession {
 
     await initPromise;
 
-    const res = await runDeap(
+    const res = await runSemiHonest(
       this.circuit,
       this.input,
       this.isLeader,

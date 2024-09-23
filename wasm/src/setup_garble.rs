@@ -42,7 +42,7 @@ pub async fn setup_garble<Ctx: Context>(
     let receiver_config = ReceiverConfig::builder().build()?;
     let mut receiver = Receiver::new(receiver_config, base_sender);
 
-    let deap_role = match role {
+    let semi_honest_role = match role {
         Role::Alice => DEAPRole::Leader,
         Role::Bob => DEAPRole::Follower,
     };
@@ -67,6 +67,10 @@ pub async fn setup_garble<Ctx: Context>(
     }
 
     Ok(DEAPThread::new(
-        deap_role, [0; 32], context, sender, receiver,
+        semi_honest_role,
+        [0; 32],
+        context,
+        sender,
+        receiver,
     ))
 }

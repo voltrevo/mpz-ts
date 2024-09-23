@@ -1,7 +1,7 @@
 import { Backend, BackendSession, checkSettingsValid, Circuit, MpcSettings } from "mpc-framework-common";
-import MpzDeapSession from "./MpzDeapSession";
+import MpzSemiHonestSession from "./MpzSemiHonestSession";
 
-export default class MpzDeapBackend implements Backend {
+export default class MpzSemiHonestBackend implements Backend {
   run(
     circuit: Circuit,
     mpcSettings: MpcSettings,
@@ -11,7 +11,7 @@ export default class MpzDeapBackend implements Backend {
   ): BackendSession {
     const checkResult = (
       checkSettingsValid(circuit, mpcSettings, name, input) ??
-      checkSettingsValidForMpzDeap(circuit, mpcSettings)
+      checkSettingsValidForMpzSemiHonest(circuit, mpcSettings)
     );
 
     if (checkResult !== undefined) {
@@ -25,7 +25,7 @@ export default class MpzDeapBackend implements Backend {
       throw new Error(`Unknown participant name: ${name}`);
     }
 
-    return new MpzDeapSession(
+    return new MpzSemiHonestSession(
       circuit,
       mpcSettings,
       input,
@@ -35,12 +35,12 @@ export default class MpzDeapBackend implements Backend {
   }
 }
 
-export function checkSettingsValidForMpzDeap(
+export function checkSettingsValidForMpzSemiHonest(
   circuit: Circuit,
   mpcSettings: MpcSettings,
 ): Error | undefined {
   if (mpcSettings.length !== 2) {
-    return new Error("MpzDeapBackend requires exactly two participants");
+    return new Error("MpzSemiHonestBackend requires exactly two participants");
   }
 
   for (const participant of mpcSettings) {

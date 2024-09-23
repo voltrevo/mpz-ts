@@ -39,14 +39,14 @@ function getWasmLib() {
   return lib;
 }
 
-export function runDeap(
+export function runSemiHonest(
   circuit: Circuit,
   inputs: Record<string, unknown>,
   isLeader: boolean,
   send: (msg: Uint8Array) => void,
   recv: () => Uint8Array,
 ) {
-  return getWasmLib().run_deap(circuit, inputs, isLeader, send, recv);
+  return getWasmLib().run_semi_honest(circuit, inputs, isLeader, send, recv);
 }
 
 export function testEval(
