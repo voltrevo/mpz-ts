@@ -5,6 +5,7 @@ import { pack } from "msgpackr";
 import { Keccak } from "sha3";
 import buffersEqual from "./buffersEqual";
 import { init, runSemiHonest } from "./wasmLib";
+import { Buffer } from 'buffer';
 
 export default class MpzSemiHonestSession implements BackendSession {
   peerName: string;
@@ -38,7 +39,7 @@ export default class MpzSemiHonestSession implements BackendSession {
     const initPromise = init(2);
 
     const setupHash = new Keccak().update(
-      pack([this.circuit, this.mpcSettings])
+      Buffer.from(pack([this.circuit, this.mpcSettings]))
     ).digest();
 
     this.send(this.peerName, setupHash);
