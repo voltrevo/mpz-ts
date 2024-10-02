@@ -1,6 +1,6 @@
 {
   "name": "mpz-ts",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Backend for mpc-framework powered by privacy-scaling-explorations/mpz",
   "main": "dist/src/index.js",
   "scripts": {

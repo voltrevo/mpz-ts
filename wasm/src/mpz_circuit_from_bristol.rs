@@ -16,10 +16,7 @@ pub fn mpz_circuit_from_bristol(
 ) -> Result<AnnotatedMpzCircuit, MpzTsError> {
     let builder = CircuitBuilder::new();
 
-    let (input_widths, output_widths) = match &circuit.io_widths {
-        Some(io_widths) => io_widths,
-        None => return Err(MpzTsError::ArithmeticCircuitNotSupported),
-    };
+    let (input_widths, output_widths) = &circuit.io_widths;
 
     if !circuit.info.constants.is_empty() {
         // Only arithmetic circuits have constants
